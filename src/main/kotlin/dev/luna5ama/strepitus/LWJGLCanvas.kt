@@ -64,6 +64,5 @@ class LWJGLCanvas(
 
     fun dispose() {
         renderer.dispose()
-        this.disposeCanvas()
     }
 }
