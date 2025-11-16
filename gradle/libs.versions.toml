@@ -28,6 +28,7 @@ kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core",
 fastutil = { module = "it.unimi.dsi:fastutil", version.ref = "fastutil" }
 
 compose-fluent = { module = "io.github.compose-fluent:fluent", version.ref = "compose-fluent" }
+compose-fluent-icons = { module = "io.github.compose-fluent:fluent-icons-extended", version.ref = "compose-fluent" }
 
 joml = { module = "org.joml:joml", version.ref = "joml" }
 

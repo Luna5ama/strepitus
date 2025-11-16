@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.fastutil)
     implementation(libs.joml)
     implementation(libs.compose.fluent)
+    implementation(libs.compose.fluent.icons)
 
     implementation(libs.bundles.kotlinEcosystem)
     implementation(libs.bundles.glWrapper)

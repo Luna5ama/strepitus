@@ -14,15 +14,26 @@ import kotlin.reflect.full.memberProperties
 @Composable
 inline fun <reified T : Any> ParameterEditor(
     parameters: T,
-    crossinline onChange: (T) -> Unit
+    noinline onChange: (T) -> Unit
+) = ParameterEditor(
+    clazz = T::class,
+    parameters = parameters,
+    onChange = onChange
+)
+
+
+@Suppress("UNCHECKED_CAST")
+@Composable
+fun <T : Any> ParameterEditor(
+    clazz: KClass<T>,
+    parameters: T,
+    onChange: (T) -> Unit
 ) {
     var expended by remember { mutableStateOf(true) }
-    val clazz = T::class
     val heading = clazz.displayName ?: camelCaseToTitle(clazz.simpleName!!.removeSuffix("Parameters"))
     val copyFunc = clazz.memberFunctions.first { member -> member.name == "copy" }
     val copyFunParameterOrder = copyFunc.parameters.drop(1).withIndex().associate { it.value.name!! to it.index }
     val properties = clazz.memberProperties.sortedBy { copyFunParameterOrder[it.name] ?: Int.MAX_VALUE }
-
     Expander(
         expended,
         onExpandedChanged = { expended = it },
@@ -32,7 +43,7 @@ inline fun <reified T : Any> ParameterEditor(
     ) {
         properties.forEachIndexed { index, it ->
             val propName = it.displayName ?: camelCaseToWords(it.name)
-            val propValue = it.get(parameters)
+            val propValue = it.get(parameters)!!
             val newParameterFunc = { newValue: Any ->
                 val newParameters = copyFunc.callBy(
                     mapOf(
@@ -43,7 +54,7 @@ inline fun <reified T : Any> ParameterEditor(
                 onChange(newParameters)
             }
             CardExpanderItem(heading = { Text(propName) }) {
-                when (val propType = it.returnType.classifier!! as KClass<*>) {
+                when (val propType = it.returnType.classifier!! as KClass<Any>) {
                     Int::class -> {
                         IntegerInput(value = propValue as Int, onValueChange = newParameterFunc)
                     }
@@ -60,6 +71,13 @@ inline fun <reified T : Any> ParameterEditor(
                     }
 
                     else -> when {
+                        propType.isData -> {
+                            ParameterEditor(
+                                clazz = propType,
+                                parameters = propValue,
+                                onChange = newParameterFunc
+                            )
+                        }
                         Enum::class.isSuperclassOf(propType) -> {
                             var enumDropdownExpanded by remember { mutableStateOf(false) }
                             DropDownButton(
@@ -70,7 +88,6 @@ inline fun <reified T : Any> ParameterEditor(
                                     expanded = enumDropdownExpanded,
                                     onDismissRequest = { enumDropdownExpanded = false },
                                 ) {
-                                    @Suppress("UNCHECKED_CAST")
                                     val enumClass = propType.java as Class<out Enum<*>>
                                     enumClass.enumConstants.forEach { enumConst ->
                                         DropdownMenuItem(
@@ -138,4 +155,14 @@ data class ViewerParameters(
     val centerY: BigDecimal = 0.0.toBigDecimal(),
     val slice: BigDecimal = 0.0.toBigDecimal(),
     val zoom: BigDecimal = 0.0.toBigDecimal(),
+)
+
+enum class DarkModeOption {
+    Auto,
+    Dark,
+    Light,
+}
+
+data class SystemParameters(
+    val darkMode: DarkModeOption = DarkModeOption.Auto,
 )
