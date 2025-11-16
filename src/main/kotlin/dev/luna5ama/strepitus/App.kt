@@ -19,7 +19,7 @@ import javax.swing.BoxLayout
 import javax.swing.JPanel
 
 @Composable
-fun App() {
+fun App(renderer: NoiseGeneratorRenderer) {
     var mainParameters by remember { mutableStateOf(MainParameters()) }
     var outputProcessingParameters by remember { mutableStateOf(OutputProcessingParameters()) }
     var viewerParameters by remember { mutableStateOf(ViewerParameters()) }
@@ -115,17 +115,13 @@ fun App() {
                     }
                 }
             }
-//            NoiseGeneratorPanel(
-//                mainParameters,
-//                outputProcessingParameters,
-//                viewerParameters,
-//                onScroll = {
-//                    viewerParameters =
-//                        viewerParameters.copy(zoom = viewerParameters.zoom - it.toBigDecimal() * 0.1.toBigDecimal())
-//                },
-//            )
         }
     }
+
+    renderer.mainParameters = mainParameters
+    renderer.outputProcessingParameters = outputProcessingParameters
+    renderer.viewerParameters = viewerParameters
+    renderer.noiseLayers = noiseLayers.toList()
 }
 
 enum class SideNavItem(val icon: ImageVector) {
@@ -133,55 +129,3 @@ enum class SideNavItem(val icon: ImageVector) {
     Noise(Icons.Default.GridDots),
     Setting(Icons.Default.Settings),
 }
-
-//@Composable
-//fun NoiseGeneratorPanel(
-//    mainParameters: MainParameters,
-//    outputProcessingParameters: OutputProcessingParameters,
-//    viewerParameters: ViewerParameters,
-//    onScroll: (wheelRotation: Int) -> Unit,
-//) {
-//    val noiseGenerator by remember {
-//        mutableStateOf(
-//            LWJGLCanvas {
-//                NoiseGeneratorRenderer(
-//                    mainParameters,
-//                    outputProcessingParameters,
-//                    viewerParameters,
-//                )
-//            }
-//        )
-//    }
-//    if (noiseGenerator.mouseWheelListeners.isEmpty()) {
-//        noiseGenerator.addMouseWheelListener { onScroll(it.wheelRotation) }
-//    } else {
-//        noiseGenerator.mouseWheelListeners[0] = { onScroll(it.wheelRotation) }
-//    }
-//    SwingPanel(
-//        modifier = Modifier.fillMaxSize(),
-//        factory = {
-//            JPanel().apply {
-//                layout = BoxLayout(this, BoxLayout.Y_AXIS)
-//                add(noiseGenerator)
-//            }
-//        }
-//    )
-//
-//    LaunchedEffect(Unit) {
-//        noiseGenerator.redraw()
-//    }
-//
-//    noiseGenerator.update {
-//        it.mainParameters = mainParameters
-//        it.outputProcessingParameters = outputProcessingParameters
-//        it.viewerParameters = viewerParameters
-//    }
-//
-//    DisposableEffect(Unit) {
-//        object : DisposableEffectResult {
-//            override fun dispose() {
-//                noiseGenerator.destroy()
-//            }
-//        }
-//    }
-//}

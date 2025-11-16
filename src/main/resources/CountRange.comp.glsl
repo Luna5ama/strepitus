@@ -2,22 +2,26 @@
 
 #extension GL_KHR_shader_subgroup_arithmetic : enable
 
+#include "/util/Math.glsl"
+
 layout(local_size_x = 32, local_size_y = 32) in;
 
 layout(std430) buffer DataBuffer {
     ivec4 data;
 } ssbo_data;
 
-layout(r32f) uniform readonly image2D uimg_noiseImage;
+layout(rgba32f) uniform readonly image3D uimg_noiseImage;
 
 shared float shared_minCount[32];
 shared float shared_maxCount[32];
 
 void main() {
-    float count = imageLoad(uimg_noiseImage, ivec2(gl_GlobalInvocationID.xy)).r;
+    vec4 count4 = imageLoad(uimg_noiseImage, ivec3(gl_GlobalInvocationID.xyz));
+    float maxCount = max4(count4);
+    float minCount = min4(count4);
 
-    float minCount1 = subgroupMin(count);
-    float maxCount1 = subgroupMax(count);
+    float minCount1 = subgroupMin(maxCount);
+    float maxCount1 = subgroupMax(maxCount);
     if (subgroupElect()) {
         shared_minCount[gl_SubgroupID] = minCount1;
         shared_maxCount[gl_SubgroupID] = maxCount1;

@@ -6,13 +6,13 @@ import androidx.compose.runtime.snapshots.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.vector.*
 import androidx.compose.ui.unit.*
+import dev.luna5ama.glwrapper.base.*
 import dev.luna5ama.glwrapper.enums.ImageFormat
 import io.github.composefluent.*
 import io.github.composefluent.component.*
 import io.github.composefluent.icons.*
 import io.github.composefluent.icons.regular.*
 import kotlinx.serialization.Transient
-import java.awt.Dialog
 import java.math.BigDecimal
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
@@ -228,25 +228,102 @@ data class MainParameters(
     }
 }
 
-enum class Format(val value: ImageFormat.Sized) {
-    R8_UN(ImageFormat.R8_UN),
-    R8G8_UN(ImageFormat.R8G8_UN),
-    R8G8B8_UN(ImageFormat.R8G8B8_UN),
-    R8G8B8A8_UN(ImageFormat.R8G8B8A8_UN),
-    R8_SN(ImageFormat.R8_SN),
-    R8G8_SN(ImageFormat.R8G8_SN),
-    R8G8B8_SN(ImageFormat.R8G8B8_SN),
-    R8G8B8A8_SN(ImageFormat.R8G8B8A8_SN),
-    R16_UN(ImageFormat.R16_UN),
-    R16G16_UN(ImageFormat.R16G16_UN),
-    R16G16B16_UN(ImageFormat.R16G16B16_UN),
-    R16G16B16A16_UN(ImageFormat.R16G16B16A16_UN),
-    R10G10B10A2_UN(ImageFormat.R10G10B10A2_UN),
+data class OutputSpec(
+    val channels: Int,
+    val pixelType: Int,
+    val pixelSize: Long
+) {
+    val format
+        get() = when (channels) {
+            1 -> GL_RED
+            2 -> GL_RG
+            3 -> GL_RGB
+            4 -> GL_RGBA
+            else -> throw IllegalArgumentException("Invalid number of channels: $channels")
+        }
+}
+
+enum class GPUFormat(val value: ImageFormat.Sized, val glslFormat: String) {
+    R8G8B8A8_UN(ImageFormat.R8G8B8A8_UN, "rgba8"),
+    R10G10B10A2_UN(ImageFormat.R10G10B10A2_UN, "rgb10_a2"),
+    R16G16B16A16_F(ImageFormat.R16G16B16A16_F, "rgba16f")
+}
+
+enum class Format(val gpuFormat: GPUFormat, val outputSpec: OutputSpec) {
+    R8_UNORM(
+        GPUFormat.R8G8B8A8_UN,
+        OutputSpec(1, GL_UNSIGNED_BYTE, 1L)
+    ),
+    R8G8_UNORM(
+        GPUFormat.R8G8B8A8_UN,
+        OutputSpec(2, GL_UNSIGNED_BYTE, 2L)
+    ),
+    R8G8B8A8_UNORM(
+        GPUFormat.R8G8B8A8_UN,
+        OutputSpec(4, GL_UNSIGNED_BYTE, 4L),
+    ),
+
+    R10G10B10A2_UNORM(
+        GPUFormat.R10G10B10A2_UN,
+        OutputSpec(4, GL_UNSIGNED_INT_2_10_10_10_REV, 4L),
+    ),
+
+    R8_SNORM(
+        GPUFormat.R8G8B8A8_UN,
+        OutputSpec(1, GL_BYTE, 1L)
+    ),
+    R8G8_SNORM(
+        GPUFormat.R8G8B8A8_UN,
+        OutputSpec(2, GL_BYTE, 2L)
+    ),
+    R8G8B8A8_SNORM(
+        GPUFormat.R8G8B8A8_UN,
+        OutputSpec(4, GL_BYTE, 4L),
+    ),
+
+    R16_UNORM(
+        GPUFormat.R16G16B16A16_F,
+        OutputSpec(1, GL_UNSIGNED_SHORT, 2L)
+    ),
+    R16G16_UNORM(
+        GPUFormat.R16G16B16A16_F,
+        OutputSpec(2, GL_UNSIGNED_SHORT, 4L)
+    ),
+    R16G16B16A16_UNORM(
+        GPUFormat.R16G16B16A16_F,
+        OutputSpec(4, GL_UNSIGNED_SHORT, 8L),
+    ),
+
+    R16_SNORM(
+        GPUFormat.R16G16B16A16_F,
+        OutputSpec(1, GL_SHORT, 2L)
+    ),
+    R16G16_SNORM(
+        GPUFormat.R16G16B16A16_F,
+        OutputSpec(2, GL_SHORT, 4L)
+    ),
+    R16G16B16A16_SNORM(
+        GPUFormat.R16G16B16A16_F,
+        OutputSpec(4, GL_SHORT, 8L),
+    ),
+
+    R16_F(
+        GPUFormat.R16G16B16A16_F,
+        OutputSpec(1, GL_HALF_FLOAT, 2L)
+    ),
+    R16G16_F(
+        GPUFormat.R16G16B16A16_F,
+        OutputSpec(2, GL_HALF_FLOAT, 4L)
+    ),
+    R16G16B16A16_F(
+        GPUFormat.R16G16B16A16_F,
+        OutputSpec(4, GL_HALF_FLOAT, 8L),
+    ),
 }
 
 
 data class OutputProcessingParameters(
-    val format: Format = Format.R8_UN,
+    val format: Format = Format.R8_UNORM,
     val normalize: Boolean = true,
     val minVal: BigDecimal = 0.0.toBigDecimal(),
     val maxVal: BigDecimal = 1.0.toBigDecimal(),
@@ -258,6 +335,13 @@ data class OutputProcessingParameters(
     }
 }
 
+
+enum class DisplayColorMode {
+    Grayscale,
+    Alpha,
+    RGB,
+}
+
 data class ViewerParameters(
     @DisplayName("Center X")
     val centerX: BigDecimal = 0.0.toBigDecimal(),
@@ -265,6 +349,7 @@ data class ViewerParameters(
     val centerY: BigDecimal = 0.0.toBigDecimal(),
     val slice: BigDecimal = 0.0.toBigDecimal(),
     val zoom: BigDecimal = 0.0.toBigDecimal(),
+    val colorMode: DisplayColorMode = DisplayColorMode.Grayscale,
 ) {
     companion object {
         val icon = Icons.Default.Eye

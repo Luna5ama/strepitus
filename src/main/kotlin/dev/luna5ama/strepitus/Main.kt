@@ -8,6 +8,7 @@ import dev.luna5ama.strepitus.gl.GlfwCoroutineDispatcher
 import dev.luna5ama.strepitus.gl.subscribeToGLFWEvents
 import org.jetbrains.skia.*
 import org.jetbrains.skia.Color
+import org.jetbrains.skia.impl.use
 import org.jetbrains.skiko.FrameDispatcher
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.opengl.GL
@@ -18,6 +19,11 @@ fun main() {
     var height = 1080
 
     glfwInit()
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4)
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6)
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE)
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1)
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 0)
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE)
     val windowHandle: Long = glfwCreateWindow(width, height, "Strepitus", 0L, 0L)
@@ -44,8 +50,12 @@ fun main() {
 
     lateinit var composeScene: ComposeScene
 
+    val renderer = NoiseGeneratorRenderer({width}, {height})
+
     fun render() {
         surface.canvas.clear(Color.WHITE)
+        context.flush()
+        renderer.draw()
         composeScene.size = IntSize(width, height)
         composeScene.render(surface.canvas.asComposeCanvas(), System.nanoTime())
 
@@ -86,7 +96,7 @@ fun main() {
     }
 
     composeScene.subscribeToGLFWEvents(windowHandle)
-    composeScene.setContent { App() }
+    composeScene.setContent { App(renderer) }
     glfwShowWindow(windowHandle)
 
     glfwDispatcher.runLoop()
