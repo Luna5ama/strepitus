@@ -40,19 +40,37 @@ enum class DistanceFunction {
     Chebyshev
 }
 
+enum class NoiseType {
+    Value,
+    Perlin,
+    Simplex,
+    Worley
+}
+
 @Immutable
 sealed interface NoiseSpecificParameters {
+    val type: NoiseType
+
     data class Value(
         val value: BigDecimal = 0.0.toBigDecimal(),
-    ) : NoiseSpecificParameters
+    ) : NoiseSpecificParameters {
+        override val type: NoiseType
+            get() = NoiseType.Value
+    }
 
     data class Perlin(
         val rotated: Boolean = false,
-    ) : NoiseSpecificParameters
+    ) : NoiseSpecificParameters {
+        override val type: NoiseType
+            get() = NoiseType.Perlin
+    }
 
     data class Simplex(
         val rotated: Boolean = false,
-    ) : NoiseSpecificParameters
+    ) : NoiseSpecificParameters {
+        override val type: NoiseType
+            get() = NoiseType.Simplex
+    }
 
     data class Worley(
         val distanceFunction: DistanceFunction = DistanceFunction.Euclidean,
@@ -70,13 +88,10 @@ fun NoiseLayerEditor(
         size = DialogSize.Companion.Standard,
         primaryButtonText = "Delete",
         onButtonClick = {
-            if (it == ContentDialogButton.Primary) {
-                if (deletingIndex in layers.indices) {
-                    layers.removeAt(deletingIndex)
-                }
-            } else {
-                deletingIndex = -1
+            if (it == ContentDialogButton.Primary && deletingIndex in layers.indices) {
+                layers.removeAt(deletingIndex)
             }
+            deletingIndex = -1
         },
         secondaryButtonText = "Cancel",
         content = {
@@ -113,6 +128,25 @@ fun NoiseLayerEditor(
             }
         ) {
             ParameterEditor(layer, { layers[i] = it })
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Button(
+            onClick = {
+                layers.add(NoiseLayerParameters())
+            },
+            buttonColors = ButtonDefaults.accentButtonColors(),
+            iconOnly = true,
+            modifier = Modifier.fillMaxWidth(0.5f)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add Layer"
+            )
         }
     }
 }

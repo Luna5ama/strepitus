@@ -7,13 +7,14 @@
 
 layout(local_size_x = 16, local_size_y = 16) in;
 
-layout(rgba32f) uniform writeonly image3D uimg_noiseImage;
+layout(rgba32f) uniform restrict image3D uimg_noiseImage;
 
 uniform vec3 uval_noiseTexSizeF;
 uniform int uval_baseFrequency;
 uniform int uval_octaves;
 uniform float uval_lacunarity;
 uniform float uval_persistence;
+uniform int uval_compositeMode; // 0: add, 1: subtract, 2: multiply
 
 // 0: cubic
 // 1: quintic
@@ -56,10 +57,9 @@ vec2 GradientNoise_2D_grad(vec2 x, int freq, uvec2 hashOffset) {
     return grad;
 }
 
-vec2 simplexNoise2(vec2 p, int freq, float alpha) {
+float simplexNoise2(vec2 p, int freq, float alpha) {
     vec2 grad;
-    float v = psrdnoise(p * float(freq), vec2(freq * 2), alpha, grad);
-    return v.xx;
+    return psrdnoise(p * float(freq), vec2(freq * 2), alpha, grad);
 }
 
 float hash11(uint p) {
@@ -75,14 +75,22 @@ void main() {
     float freq = uval_baseFrequency;
     float amp = 1.0;
 
-    vec2 v = vec2(0.0);
+    vec4 v = vec4(0.0);
     uint k = 0;
 
     for (int i = 0; i < uval_octaves; ++i) {
-        v += amp * simplexNoise2(noisePos.xy, int(freq), hash11(k++) * PI_2);
+        v += amp * simplexNoise2(noisePos.xy, int(freq), hash11(k++) * PI_2).xxxx;
         amp *= uval_persistence;
         freq *= uval_lacunarity;
     }
 
-    imageStore(uimg_noiseImage, texelPos, vec4(v, v));
+    vec4 outputValue = imageLoad(uimg_noiseImage, texelPos);
+    if (uval_compositeMode == 0) {
+        outputValue += v;
+    } else if (uval_compositeMode == 1) {
+        outputValue -= v;
+    } else if (uval_compositeMode == 2) {
+        outputValue *= v;
+    }
+    imageStore(uimg_noiseImage, texelPos, outputValue);
 }

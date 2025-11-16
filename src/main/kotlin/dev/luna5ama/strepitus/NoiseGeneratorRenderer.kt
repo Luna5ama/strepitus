@@ -197,6 +197,7 @@ class NoiseGeneratorRenderer(
             generateNoiseShader.uniform1i("uval_octaves", it.octaves)
             generateNoiseShader.uniform1f("uval_lacunarity", it.lacunarity.toFloat())
             generateNoiseShader.uniform1f("uval_persistence", it.persistence.toFloat())
+            generateNoiseShader.uniform1i("uval_compositeMode", it.compositeMode.ordinal)
 
             glDispatchCompute(mainParameters.width / 16, mainParameters.height / 16, mainParameters.slices)
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
