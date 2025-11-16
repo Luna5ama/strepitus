@@ -2,10 +2,7 @@ package dev.luna5ama.strepitus
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.onDrag
-import androidx.compose.foundation.gestures.rememberScrollableState
-import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -14,8 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.*
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.rotary.onRotaryScrollEvent
 import androidx.compose.ui.layout.*
 import androidx.compose.ui.unit.*
 import io.github.composefluent.*
@@ -24,6 +19,9 @@ import io.github.composefluent.component.rememberScrollbarAdapter
 import io.github.composefluent.icons.*
 import io.github.composefluent.icons.regular.*
 import java.math.MathContext
+import java.math.RoundingMode
+
+val roundingMode = MathContext(4, RoundingMode.FLOOR)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -139,15 +137,15 @@ fun App(renderer: NoiseGeneratorRenderer) {
                         orientation = Orientation.Vertical,
                         state = rememberScrollableState { delta ->
                             viewerParameters = viewerParameters.copy(
-                                zoom = (viewerParameters.zoom + (delta / 1000.0).toBigDecimal())
+                                zoom = (viewerParameters.zoom + (delta / 1000.0).toBigDecimal()).round(roundingMode)
                             )
                             delta
                         }
                     )
                     .onDrag {
                         viewerParameters = viewerParameters.copy(
-                            centerX = (viewerParameters.centerX - it.x.toBigDecimal()),
-                            centerY = (viewerParameters.centerY - it.y.toBigDecimal())
+                            centerX = (viewerParameters.centerX - it.x.toBigDecimal()).round(roundingMode),
+                            centerY = (viewerParameters.centerY - it.y.toBigDecimal()).round(roundingMode)
                         )
                     }
             ) {}
