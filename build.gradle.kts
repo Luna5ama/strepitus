@@ -1,3 +1,5 @@
+import org.jetbrains.compose.reload.gradle.ComposeHotRun
+
 group = "dev.luna5ama"
 version = "0.0.1-SNAPSHOT"
 
@@ -56,4 +58,8 @@ dependencies {
     implementation(libs.bundles.kotlinEcosystem)
     implementation(libs.bundles.glWrapper)
     implementation(libs.bundles.kmogus)
+}
+
+tasks.withType<ComposeHotRun>().configureEach {
+    systemProperties["strepitus.devenv"] = true
 }

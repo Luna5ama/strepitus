@@ -8,9 +8,11 @@ import dev.luna5ama.glwrapper.ShaderSource
 import dev.luna5ama.glwrapper.base.*
 import dev.luna5ama.glwrapper.enums.BufferTarget
 import dev.luna5ama.glwrapper.enums.FilterMode
+import dev.luna5ama.glwrapper.enums.GLObjectType
 import dev.luna5ama.glwrapper.enums.ImageFormat
 import dev.luna5ama.glwrapper.enums.WrapMode
 import dev.luna5ama.glwrapper.objects.BufferObject
+import dev.luna5ama.glwrapper.objects.IGLObject
 import dev.luna5ama.glwrapper.objects.TextureObject
 import dev.luna5ama.strepitus.gl.register
 import dev.luna5ama.strepitus.params.GPUFormat
@@ -19,6 +21,7 @@ import dev.luna5ama.strepitus.params.NoiseLayerParameters
 import dev.luna5ama.strepitus.params.OutputParameters
 import dev.luna5ama.strepitus.params.ViewerParameters
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.collections.forEach
 import kotlin.math.pow
 
 class NoiseGeneratorRenderer(
@@ -204,5 +207,21 @@ class NoiseGeneratorRenderer(
     fun dispose() {
         applyObserverHandle.dispose()
         this.destroy()
+    }
+
+    fun reloadShaders() {
+        needRegenerate.set(true)
+        ShaderSource.clearCache()
+        val objs = mutableMapOf<GLObjectType, MutableSet<IGLObject>>()
+        collectObjs(objs)
+        objs[GLObjectType.Program]?.forEach { obj ->
+            if (obj is ShaderProgram) {
+                runCatching {
+                    obj.reload()
+                }.onFailure {
+                    it.printStackTrace()
+                }
+            }
+        }
     }
 }
