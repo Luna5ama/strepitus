@@ -1,12 +1,7 @@
 package dev.luna5ama.strepitus.params
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.*
 import androidx.compose.ui.*
 import androidx.compose.ui.unit.*
@@ -23,10 +18,18 @@ enum class CompositeMode {
     Multiply
 }
 
-data class NoiseLayerParameters<T : NoiseSpecificParameters>(
-    val enabled: Boolean,
-    val compositeMode: CompositeMode,
-    val specificParameters: T,
+data class NoiseLayerParameters(
+    val enabled: Boolean = true,
+    val compositeMode: CompositeMode = CompositeMode.Add,
+    @IntRangeVal(min = 1, max = 32)
+    val baseFrequency: Int = 4,
+    @IntRangeVal(min = 1, max = 16)
+    val octaves: Int = 4,
+    @DecimalRangeVal(min = -2.0, max = 2.0, step = 0.05)
+    val persistence: BigDecimal = 0.5.toBigDecimal(),
+    @DecimalRangeVal(min = 1.0, max = 4.0, step = 0.05)
+    val lacunarity: BigDecimal = 2.0.toBigDecimal(),
+    val specificParameters: NoiseSpecificParameters = NoiseSpecificParameters.Simplex(),
     @Transient
     val expanded: Boolean = true,
 )
@@ -58,7 +61,7 @@ sealed interface NoiseSpecificParameters {
 
 @Composable
 fun NoiseLayerEditor(
-    layers: SnapshotStateList<NoiseLayerParameters<*>>,
+    layers: SnapshotStateList<NoiseLayerParameters>,
 ) {
     var deletingIndex by remember { mutableIntStateOf(-1) }
     ContentDialog(
@@ -80,23 +83,6 @@ fun NoiseLayerEditor(
             Text("Are you sure you want to delete this layer?")
         }
     )
-//        Button(
-//            onClick = {
-//                if (deletingIndex in layers.indices) {
-//                    layers.removeAt(deletingIndex)
-//                }
-//                deletingIndex = -1
-//            }
-//        ) {
-//            Text("Delete")
-//        }
-//        Button(
-//            onClick = {
-//                deletingIndex = -1
-//            }
-//        ) {
-//            Text("Cancel")
-//        }
     layers.forEachIndexed { i, layer ->
         Expander(
             layer.expanded,
@@ -126,7 +112,7 @@ fun NoiseLayerEditor(
                 }
             }
         ) {
-
+            ParameterEditor(layer, { layers[i] = it })
         }
     }
 }

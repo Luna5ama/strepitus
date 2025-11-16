@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.*
 import dev.luna5ama.strepitus.gl.GlfwCoroutineDispatcher
 import dev.luna5ama.strepitus.gl.subscribeToGLFWEvents
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import org.jetbrains.skia.*
 import org.jetbrains.skiko.FrameDispatcher
 import org.lwjgl.glfw.GLFW.*
@@ -46,16 +47,40 @@ fun main() {
         SurfaceProps()
     )!!
     val glfwDispatcher = GlfwCoroutineDispatcher() // a custom coroutine dispatcher, in which Compose will run
+    val scope = CoroutineScope(glfwDispatcher)
 
     glfwSetWindowCloseCallback(windowHandle) {
+        scope.cancel()
         glfwDispatcher.stop()
     }
 
-    lateinit var composeScene: ComposeScene
+    var renderFunc = {}
 
-    val renderer = NoiseGeneratorRenderer({ width }, { height })
+    val frameDispatcher = FrameDispatcher(glfwDispatcher) { renderFunc() }
+    val renderer = NoiseGeneratorRenderer(scope, frameDispatcher,{ width }, { height })
     val readingStatesOnRender = mutableScatterSetOf<Any>()
-    fun render() {
+
+    val applyObserverHandle: ObserverHandle = Snapshot.registerApplyObserver { changedStates, _ ->
+        for (state in changedStates) {
+            if (state in readingStatesOnRender) {
+                frameDispatcher.scheduleFrame()
+                break
+            }
+        }
+    }
+
+
+    val temp = floatArrayOf(0f)
+    val dummy = floatArrayOf(1.0f)
+    glfwGetWindowContentScale(windowHandle, temp, dummy)
+    val composeScene = CanvasLayersComposeScene(
+        Density(temp[0]),
+        size = IntSize(width, height),
+        invalidate = frameDispatcher::scheduleFrame,
+        coroutineContext = glfwDispatcher
+    )
+
+    renderFunc = {
         Snapshot.observe(readObserver = readingStatesOnRender::add) {
             renderer.draw()
         }
@@ -67,26 +92,6 @@ fun main() {
         context.flush()
         glfwSwapBuffers(windowHandle)
     }
-
-    val frameDispatcher = FrameDispatcher(glfwDispatcher) { render() }
-    val applyObserverHandle: ObserverHandle = Snapshot.registerApplyObserver { changedStates, _ ->
-        for (state in changedStates) {
-            if (state in readingStatesOnRender) {
-                frameDispatcher.scheduleFrame()
-                break
-            }
-        }
-    }
-
-    val temp = floatArrayOf(0f)
-    val dummy = floatArrayOf(1.0f)
-    glfwGetWindowContentScale(windowHandle, temp, dummy)
-    composeScene = CanvasLayersComposeScene(
-        Density(temp[0]),
-        size = IntSize(width, height),
-        invalidate = frameDispatcher::scheduleFrame,
-        coroutineContext = glfwDispatcher
-    )
 
     glfwSetWindowSizeCallback(windowHandle) { _, windowWidth, windowHeight ->
         width = windowWidth
@@ -106,19 +111,15 @@ fun main() {
 
 
         glfwSwapInterval(0)
-        render()
+        renderFunc()
         glfwSwapInterval(1)
     }
 
-    composeScene.subscribeToGLFWEvents(windowHandle)
+    composeScene.subscribeToGLFWEvents(windowHandle, renderer)
     composeScene.setContent { App(renderer) }
     glfwShowWindow(windowHandle)
 
-    val scope = CoroutineScope(glfwDispatcher)
-
-
     glfwDispatcher.runLoop()
-//    l.cancel()
 
     applyObserverHandle.dispose()
     composeScene.close()

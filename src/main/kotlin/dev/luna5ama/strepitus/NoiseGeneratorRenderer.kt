@@ -20,18 +20,27 @@ import dev.luna5ama.strepitus.params.MainParameters
 import dev.luna5ama.strepitus.params.NoiseLayerParameters
 import dev.luna5ama.strepitus.params.OutputParameters
 import dev.luna5ama.strepitus.params.ViewerParameters
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import org.jetbrains.skiko.FrameDispatcher
+import org.lwjgl.glfw.GLFW.GLFW_KEY_F6
+import org.lwjgl.glfw.GLFW.GLFW_RELEASE
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.forEach
 import kotlin.math.pow
 
 class NoiseGeneratorRenderer(
+    private val scope: CoroutineScope,
+    private val frameDispatcher: FrameDispatcher,
     private val widthProvider: () -> Int,
     private val heightProvider: () -> Int,
 ) : AbstractRenderer() {
     lateinit var mainParametersProvider: () -> MainParameters
     lateinit var outputParametersProvider: () -> OutputParameters
     lateinit var viewerParametersProvider: () -> ViewerParameters
-    lateinit var noiseLayersProvider: () -> List<NoiseLayerParameters<*>>
+    lateinit var noiseLayersProvider: () -> List<NoiseLayerParameters>
 
     private val mainParameters: MainParameters
         get() = mainParametersProvider()
@@ -39,7 +48,7 @@ class NoiseGeneratorRenderer(
         get() = outputParametersProvider()
     private val viewerParameters: ViewerParameters
         get() = viewerParametersProvider()
-    private val noiseLayers: List<NoiseLayerParameters<*>>
+    private val noiseLayers: List<NoiseLayerParameters>
         get() = noiseLayersProvider()
 
     var frameWidth = 0
@@ -79,7 +88,27 @@ class NoiseGeneratorRenderer(
         buffer("DataBuffer", dataBuffer, BufferTarget.ShaderStorage)
     }
 
-    private val generateNoiseShader = register(ShaderProgram(ShaderSource.Comp("GenerateNoise.comp.glsl")))
+    private var generateNoiseShader: ShaderProgram? = null
+    private var lastSource = ""
+
+    private fun updateShaderProgram(): Boolean {
+        val src = ShaderSource.Comp("GenerateNoise.comp.glsl")
+        val srcStr = src.resolveCodeSrc()
+        if (generateNoiseShader == null || lastSource != srcStr) {
+            lastSource = srcStr
+            val newProgram = try {
+                ShaderProgram(src)
+            } catch (_: IllegalStateException) {
+                return false
+            }
+            generateNoiseShader?.destroy()
+            generateNoiseShader = newProgram
+            return true
+        }
+
+        return false
+    }
+
     private val resetCounterShader = register(ShaderProgram(ShaderSource.Comp("ResetCounter.comp.glsl")))
     private val countRangeShader = register(ShaderProgram(ShaderSource.Comp("CountRange.comp.glsl")))
     private val normalizeShaders = object : ShaderProgram.Variants<GPUFormat>() {
@@ -114,7 +143,24 @@ class NoiseGeneratorRenderer(
         )
     )
 
-    private fun generate() {
+    init {
+        keyboard.register(GLFW_KEY_F6) { action ->
+            if (action == GLFW_RELEASE) {
+                reloadShaders()
+            }
+        }
+        scope.launch {
+            while (isActive) {
+                if (updateShaderProgram()) {
+                    needRegenerate.set(true)
+                    frameDispatcher.scheduleFrame()
+                }
+                delay(500L)
+            }
+        }
+    }
+
+    private fun generate(generateNoiseShader: ShaderProgram) {
         noiseImage.destroy()
         outputImage.destroy()
 
@@ -137,17 +183,24 @@ class NoiseGeneratorRenderer(
         resetCounterShader.applyBinding(bindings)
         glDispatchCompute(1, 1, 1)
 
-        generateNoiseShader.bind()
-        generateNoiseShader.applyBinding(bindings)
-        generateNoiseShader.uniform3f(
-            "uval_noiseTexSizeF",
-            mainParameters.width.toFloat(),
-            mainParameters.height.toFloat(),
-            mainParameters.slices.toFloat()
-        )
-        glDispatchCompute(mainParameters.width / 16, mainParameters.height / 16, mainParameters.slices)
+        noiseLayers.forEach {
+            if (!it.enabled) return@forEach
+            generateNoiseShader.bind()
+            generateNoiseShader.applyBinding(bindings)
+            generateNoiseShader.uniform3f(
+                "uval_noiseTexSizeF",
+                mainParameters.width.toFloat(),
+                mainParameters.height.toFloat(),
+                mainParameters.slices.toFloat()
+            )
+            generateNoiseShader.uniform1i("uval_baseFrequency", it.baseFrequency)
+            generateNoiseShader.uniform1i("uval_octaves", it.octaves)
+            generateNoiseShader.uniform1f("uval_lacunarity", it.lacunarity.toFloat())
+            generateNoiseShader.uniform1f("uval_persistence", it.persistence.toFloat())
 
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
+            glDispatchCompute(mainParameters.width / 16, mainParameters.height / 16, mainParameters.slices)
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
+        }
     }
 
     private fun process() {
@@ -169,15 +222,18 @@ class NoiseGeneratorRenderer(
     }
 
     override fun draw() {
-        if (needRegenerate.getAndSet(false)) {
-            needReprocess.set(true)
-            Snapshot.observe(readObserver = readingStatesOnGenerate::add) {
-                generate()
+        val generateNoiseShader = generateNoiseShader
+        if (generateNoiseShader != null) {
+            if (needRegenerate.getAndSet(false)) {
+                needReprocess.set(true)
+                Snapshot.observe(readObserver = readingStatesOnGenerate::add) {
+                    generate(generateNoiseShader)
+                }
             }
-        }
-        if (needReprocess.getAndSet(false)) {
-            Snapshot.observe(readObserver = readingStatesOnProcess::add) {
-                process()
+            if (needReprocess.getAndSet(false)) {
+                Snapshot.observe(readObserver = readingStatesOnProcess::add) {
+                    process()
+                }
             }
         }
 

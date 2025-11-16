@@ -3,13 +3,18 @@ package dev.luna5ama.strepitus.params
 import androidx.compose.runtime.*
 import dev.luna5ama.strepitus.DecimalInput
 import dev.luna5ama.strepitus.IntegerInput
+import dev.luna5ama.strepitus.SliderDecimalInput
+import dev.luna5ama.strepitus.SliderIntegerInput
 import dev.luna5ama.strepitus.ToggleSwitch
 import dev.luna5ama.strepitus.camelCaseToWords
+import dev.luna5ama.strepitus.params.displayName
 import io.github.composefluent.component.*
 import kotlinx.serialization.Transient
 import java.math.BigDecimal
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty1
 import kotlin.reflect.full.isSuperclassOf
 import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.full.memberProperties
@@ -38,7 +43,6 @@ fun <T : Any> ParameterEditor(
         .sortedBy { copyFunParameterOrder[it.name] ?: Int.MAX_VALUE }
 
     properties.forEachIndexed { index, it ->
-        val propName = it.displayName ?: camelCaseToWords(it.name)
         val propValue = it.get(parameters)!!
         val newParameterFunc = { newValue: Any ->
             val newParameters = copyFunc.callBy(
@@ -49,34 +53,65 @@ fun <T : Any> ParameterEditor(
             ) as T
             onChange(newParameters)
         }
-        val propType = it.returnType.classifier!! as KClass<Any>
-        CardExpanderItem(heading = { Text(propName) }) {
-            ParameterField(propType, propValue, newParameterFunc)
-        }
+        ParameterField(
+            prop = it,
+            propValue = propValue,
+            newParameterFunc = newParameterFunc
+        )
     }
 }
 
 @Suppress("UNCHECKED_CAST")
 @Composable
 private fun ParameterField(
-    propType: KClass<Any>,
+    prop: KProperty<*>,
     propValue: Any,
     newParameterFunc: (Any) -> Unit
 ) {
-    when (propType) {
+    val propName = prop.displayName ?: camelCaseToWords(prop.name)
+    when (val propType = prop.returnType.classifier!! as KClass<Any>) {
         Int::class -> {
-            IntegerInput(value = propValue as Int, onValueChange = newParameterFunc)
+            val intRangeAnn = prop.annotations.filterIsInstance<IntRangeVal>().firstOrNull()
+            if (intRangeAnn != null) {
+                SliderIntegerInput(
+                    name = propName,
+                    value = propValue as Int,
+                    sliderMin = intRangeAnn.min,
+                    sliderMax = intRangeAnn.max,
+                    onValueChange = newParameterFunc
+                )
+            } else {
+                CardExpanderItem(heading = { Text(propName) }) {
+                    IntegerInput(value = propValue as Int, onValueChange = newParameterFunc)
+                }
+            }
         }
 
         BigDecimal::class -> {
-            DecimalInput(value = propValue as BigDecimal, onValueChange = newParameterFunc)
+            val decimalRangeAnn = prop.annotations.filterIsInstance<DecimalRangeVal>().firstOrNull()
+            if (decimalRangeAnn != null) {
+                SliderDecimalInput(
+                    name = propName,
+                    value = propValue as BigDecimal,
+                    sliderMin = decimalRangeAnn.min.toBigDecimal(),
+                    sliderMax = decimalRangeAnn.max.toBigDecimal(),
+                    sliderStep = decimalRangeAnn.step.toBigDecimal(),
+                    onValueChange = newParameterFunc
+                )
+            } else {
+                CardExpanderItem(heading = { Text(propName) }) {
+                    DecimalInput(value = propValue as BigDecimal, onValueChange = newParameterFunc)
+                }
+            }
         }
 
         Boolean::class -> {
-            ToggleSwitch(
-                checked = propValue as Boolean,
-                onCheckStateChange = newParameterFunc
-            )
+            CardExpanderItem(heading = { Text(propName) }) {
+                ToggleSwitch(
+                    checked = propValue as Boolean,
+                    onCheckStateChange = newParameterFunc
+                )
+            }
         }
 
         else -> when {
@@ -89,24 +124,26 @@ private fun ParameterField(
             }
 
             Enum::class.isSuperclassOf(propType) -> {
-                var enumDropdownExpanded by remember { mutableStateOf(false) }
-                DropDownButton(
-                    onClick = { enumDropdownExpanded = true },
-                ) {
-                    Text((propValue as Enum<*>).name)
-                    DropdownMenu(
-                        expanded = enumDropdownExpanded,
-                        onDismissRequest = { enumDropdownExpanded = false },
+                CardExpanderItem(heading = { Text(propName) }) {
+                    var enumDropdownExpanded by remember { mutableStateOf(false) }
+                    DropDownButton(
+                        onClick = { enumDropdownExpanded = true },
                     ) {
-                        val enumClass = propType.java as Class<out Enum<*>>
-                        enumClass.enumConstants.forEach { enumConst ->
-                            DropdownMenuItem(
-                                onClick = {
-                                    newParameterFunc(enumConst)
-                                    enumDropdownExpanded = false
-                                },
-                            ) {
-                                Text(enumConst.name)
+                        Text((propValue as Enum<*>).name)
+                        DropdownMenu(
+                            expanded = enumDropdownExpanded,
+                            onDismissRequest = { enumDropdownExpanded = false },
+                        ) {
+                            val enumClass = propType.java as Class<out Enum<*>>
+                            enumClass.enumConstants.forEach { enumConst ->
+                                DropdownMenuItem(
+                                    onClick = {
+                                        newParameterFunc(enumConst)
+                                        enumDropdownExpanded = false
+                                    },
+                                ) {
+                                    Text(enumConst.name)
+                                }
                             }
                         }
                     }
@@ -122,3 +159,11 @@ annotation class DisplayName(val name: String)
 
 val KAnnotatedElement.displayName: String?
     get() = this.annotations.filterIsInstance<DisplayName>().firstOrNull()?.name
+
+@Target(AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class IntRangeVal(val min: Int, val max: Int)
+
+@Target(AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class DecimalRangeVal(val min: Double, val max: Double, val step: Double)

@@ -115,8 +115,8 @@ float psrdnoise(vec2 x, vec2 period, float alpha, out vec2 gradient) {
 //	vec3 hash = mod(iu, 289.0);
 //	hash = mod((hash*51.0 + 2.0)*hash + iv, 289.0);
 //	hash = mod((hash*34.0 + 10.0)*hash, 289.0);
-    uvec3 iu3 = uvec3(ivec3(iu));
-    uvec3 iv3 = uvec3(ivec3(iv));
+    uvec3 iu3 = uvec3(ivec3(floor(iu)));
+    uvec3 iv3 = uvec3(ivec3(floor(iv)));
     uvec3 hash1 = uvec3(hash_11_q5(iu3.x), hash_11_q5(iu3.y), hash_11_q5(iu3.z));
     uvec3 hash2 = uvec3(hash_11_q5(iv3.x), hash_11_q5(iv3.y), hash_11_q5(iv3.z));
     uvec3 hash3 = uvec3(hash_21_q5(uvec2(hash1.x, hash2.x)), hash_21_q5(uvec2(hash1.y, hash2.y)), hash_21_q5(uvec2(hash1.z, hash2.z)));

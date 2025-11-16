@@ -5,8 +5,8 @@ import androidx.compose.ui.geometry.*
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.scene.*
-import androidx.compose.ui.unit.*
 import androidx.compose.ui.util.*
+import dev.luna5ama.strepitus.AbstractRenderer
 import org.lwjgl.glfw.GLFW.*
 import java.awt.Component
 import java.awt.Toolkit
@@ -17,8 +17,8 @@ import java.awt.event.MouseWheelEvent
 import java.awt.event.KeyEvent as AwtKeyEvent
 
 @OptIn(ExperimentalComposeUiApi::class, InternalComposeUiApi::class)
-fun ComposeScene.subscribeToGLFWEvents(windowHandle: Long) {
-    glfwSetMouseButtonCallback(windowHandle) { _, button, action, mods ->
+fun ComposeScene.subscribeToGLFWEvents(windowHandle: Long, renderer: AbstractRenderer) {
+    glfwSetMouseButtonCallback(windowHandle) { window, button, action, mods ->
         sendPointerEvent(
             eventType = when (action) {
                 GLFW_PRESS -> PointerEventType.Press
@@ -59,6 +59,7 @@ fun ComposeScene.subscribeToGLFWEvents(windowHandle: Long) {
                 else -> null
             }
         )
+        renderer.mouse.mouseButtonCallback(window, button, action, mods)
     }
 
     glfwSetCursorPosCallback(windowHandle) { _, xpos, ypos ->
@@ -90,7 +91,7 @@ fun ComposeScene.subscribeToGLFWEvents(windowHandle: Long) {
                 isNumLockOn = glfwGetKey(windowHandle, GLFW_KEY_NUM_LOCK) == GLFW_PRESS,
             ),
 //            nativeEvent = MouseEvent(getAwtMods(windowHandle),
-                    button = null
+            button = null
         )
     }
 
@@ -111,7 +112,7 @@ fun ComposeScene.subscribeToGLFWEvents(windowHandle: Long) {
         )
     }
 
-    glfwSetKeyCallback(windowHandle) { _, key, _, action, mods ->
+    glfwSetKeyCallback(windowHandle) { window, key, scancode, action, mods ->
         val awtId = when (action) {
             GLFW_PRESS, GLFW_REPEAT -> KEY_PRESSED
             else -> KEY_RELEASED
@@ -122,6 +123,7 @@ fun ComposeScene.subscribeToGLFWEvents(windowHandle: Long) {
         // Note that we don't distinguish between Left/Right Shift, Del from numpad or not, etc.
         // To distinguish we should change `location` parameter
         sendKeyEvent(makeKeyEvent(awtId, time, getAwtMods(windowHandle), awtKey, 0.toChar(), KEY_LOCATION_STANDARD))
+        renderer.keyboard.keyCallback(window, key, scancode, action, mods)
     }
 
     glfwSetCharCallback(windowHandle) { _, codepoint ->

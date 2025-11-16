@@ -10,6 +10,10 @@ layout(local_size_x = 16, local_size_y = 16) in;
 layout(rgba32f) uniform writeonly image3D uimg_noiseImage;
 
 uniform vec3 uval_noiseTexSizeF;
+uniform int uval_baseFrequency;
+uniform int uval_octaves;
+uniform float uval_lacunarity;
+uniform float uval_persistence;
 
 // 0: cubic
 // 1: quintic
@@ -52,7 +56,7 @@ vec2 GradientNoise_2D_grad(vec2 x, int freq, uvec2 hashOffset) {
     return grad;
 }
 
-vec2 noiseGradient(vec2 p, int freq, float alpha) {
+vec2 simplexNoise2(vec2 p, int freq, float alpha) {
     vec2 grad;
     float v = psrdnoise(p * float(freq), vec2(freq * 2), alpha, grad);
     return v.xx;
@@ -68,15 +72,16 @@ void main() {
     vec3 noisePos = (vec3(texelPos) + vec3(0.5)) / uval_noiseTexSizeF;
     noisePos = noisePos * 2.0 - 1.0;
 
-    int freq = 4;
+    float freq = uval_baseFrequency;
     float amp = 1.0;
 
     vec2 v = vec2(0.0);
     uint k = 0;
 
-    for (uint i = 0; i < 4; ++i) {
-        v += amp * noiseGradient(noisePos.xy, freq, hash11(k++) * PI_2);
-        freq *= 2;
+    for (int i = 0; i < uval_octaves; ++i) {
+        v += amp * simplexNoise2(noisePos.xy, int(freq), hash11(k++) * PI_2);
+        amp *= uval_persistence;
+        freq *= uval_lacunarity;
     }
 
     imageStore(uimg_noiseImage, texelPos, vec4(v, v));

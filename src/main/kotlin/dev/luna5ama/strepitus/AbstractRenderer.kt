@@ -6,6 +6,8 @@ import dev.luna5ama.strepitus.gl.SamplerManager
 import dev.luna5ama.strepitus.gl.register
 
 abstract class AbstractRenderer : IGLObjContainer by IGLObjContainer.Impl() {
+    val keyboard = Keyboard()
+    val mouse = Mouse()
     val samplerManager = register(SamplerManager())
     val basic = register(Basic())
 

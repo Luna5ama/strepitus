@@ -41,15 +41,7 @@ fun App(renderer: NoiseGeneratorRenderer) {
     var viewerParameters by remember { mutableStateOf(ViewerParameters()) }
     var systemParameters by remember { mutableStateOf(SystemParameters()) }
 
-    val noiseLayers = remember {
-        mutableStateListOf<NoiseLayerParameters<*>>(
-            NoiseLayerParameters(
-                true,
-                CompositeMode.Add,
-                NoiseSpecificParameters.Perlin(false)
-            )
-        )
-    }
+    val noiseLayers = remember { mutableStateListOf(NoiseLayerParameters()) }
 
     val darkMode = when (systemParameters.darkMode) {
         DarkModeOption.Auto -> isSystemInDarkTheme()
