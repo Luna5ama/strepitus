@@ -8,6 +8,20 @@ plugins {
     alias(libs.plugins.compose.hotReload)
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+        @Suppress("UnstableApiUsage")
+        vendor.set(JvmVendorSpec.JETBRAINS)
+    }
+}
+
+compose.desktop {
+    application {
+        mainClass = "dev.luna5ama.strepitus.MainKt"
+    }
+}
+
 repositories {
     mavenCentral()
     google()
@@ -17,7 +31,9 @@ repositories {
 }
 
 dependencies {
-    implementation(compose.desktop.currentOs)
+    implementation(compose.desktop.currentOs) {
+        exclude(group = "org.jetbrains.compose.material")
+    }
 
     implementation(platform("org.lwjgl:lwjgl-bom:${libs.versions.lwjgl.get()}"))
 
@@ -36,6 +52,7 @@ dependencies {
     }
 
     implementation(libs.joml)
+    implementation(libs.compose.fluent)
 
     implementation(libs.bundles.kotlinEcosystem)
     implementation(libs.bundles.glWrapper)

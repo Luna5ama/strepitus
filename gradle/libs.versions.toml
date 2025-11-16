@@ -3,7 +3,7 @@ kotlin = "2.2.21"
 
 compose = "1.9.1"
 compose-fluent = "v0.1.0"
-compose-hot-reload = "1.0.0-beta03"
+compose-hot-reload = "1.0.0-rc03"
 
 kotlinx-coroutines = "1.9.0"
 
@@ -18,11 +18,12 @@ kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 compose-hotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "compose-hot-reload" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-compose-fluent = { id = "io.github.compose-fluent:fluent", version.ref = "compose-fluent" }
 
 [libraries]
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+
+compose-fluent = { module = "io.github.compose-fluent:fluent", version.ref = "compose-fluent" }
 
 joml = { module = "org.joml:joml", version.ref = "joml" }
 

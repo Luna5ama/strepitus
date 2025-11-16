@@ -11,7 +11,10 @@ import kotlin.properties.Delegates
 class LWJGLCanvas(
     val renderer: Renderer,
     var rotationSpeed: Float,
-) : AWTGLCanvas(GLData()) {
+) : AWTGLCanvas(GLData().apply {
+    swapInterval = 1
+    sRGB = true
+}) {
     init {
         println("Recomposição")
     }
@@ -45,8 +48,8 @@ class LWJGLCanvas(
     }
 
     fun startLoop() {
-        var initialTime = System.currentTimeMillis()
         val renderLoop: Runnable = object : Runnable {
+            var initialTime = System.currentTimeMillis()
             override fun run() {
                 val now = System.currentTimeMillis()
                 lastDeltaTimeSec = (now - initialTime).toFloat() / 1_000f

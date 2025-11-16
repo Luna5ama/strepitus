@@ -8,7 +8,7 @@ pluginManagement {
 
     plugins {
         id("dev.luna5ama.jar-optimizer") version "1.2-SNAPSHOT"
-        id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+        id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
     }
 }
 

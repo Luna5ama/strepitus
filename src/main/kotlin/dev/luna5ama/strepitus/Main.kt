@@ -1,10 +1,6 @@
 package dev.luna5ama.strepitus
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Divider
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Slider
-import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
@@ -14,6 +10,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import io.github.composefluent.FluentTheme
+import io.github.composefluent.Stroke
+import io.github.composefluent.component.*
 import javax.swing.BoxLayout
 import javax.swing.JPanel
 import kotlin.math.max
@@ -31,19 +30,17 @@ fun main() = application {
         state = rememberWindowState(width = 800.dp, height = 600.dp)
     ) {
         var rotationSpeed by remember { mutableStateOf(INITIAL_ROTATION_SPEED) }
+        var outputProcessingParameters by remember { mutableStateOf(OutputProcessingParameters()) }
 
-        MaterialTheme {
-            Column(
+        FluentTheme {
+            Row(
                 modifier = Modifier.fillMaxSize().padding(5.dp),
-                verticalArrangement = Arrangement.spacedBy(5.dp)
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 Column {
-                    Text(text = "Move slider or mouse scroll on canvas to speed control", fontSize = 25.sp)
-                    Divider(thickness = 1.dp, color = Color.DarkGray)
-                    Slider(
-                        value = rotationSpeed,
-                        onValueChange = { rotationSpeed = it },
-                        valueRange = (MIN_ROTATION_SPEED..MAX_ROTATION_SPEED),
+                    OutputProcessingParametersEditor(
+                        outputProcessingParameters,
+                        { outputProcessingParameters = it }
                     )
                 }
                 LWJGLSwingPanel(
