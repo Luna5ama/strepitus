@@ -51,6 +51,7 @@ dependencies {
         exclude(group = "org.lwjgl")
     }
 
+    implementation(libs.fastutil)
     implementation(libs.joml)
     implementation(libs.compose.fluent)
 
