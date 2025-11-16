@@ -59,7 +59,7 @@ vec2 GradientNoise_2D_grad(vec2 x, int freq, uvec2 hashOffset) {
 
 float simplexNoise2(vec2 p, int freq, float alpha) {
     vec2 grad;
-    return psrdnoise(p * float(freq), vec2(freq * 2), alpha, grad);
+    return psrdnoise(p * float(freq), vec2(freq), alpha, grad);
 }
 
 float hash11(uint p) {
@@ -70,7 +70,6 @@ void main() {
     ivec3 texelPos = ivec3(gl_GlobalInvocationID.xyz);
 
     vec3 noisePos = (vec3(texelPos) + vec3(0.5)) / uval_noiseTexSizeF;
-    noisePos = noisePos * 2.0 - 1.0;
 
     float freq = uval_baseFrequency;
     float amp = 1.0;
@@ -79,7 +78,7 @@ void main() {
     uint k = 0;
 
     for (int i = 0; i < uval_octaves; ++i) {
-        v += amp * simplexNoise2(noisePos.xy, int(freq), hash11(k++) * PI_2).xxxx;
+        v += amp * simplexNoise2(noisePos.xy, int(freq * 2.0), hash11(k++) * PI_2).xxxx;
         amp *= uval_persistence;
         freq *= uval_lacunarity;
     }
