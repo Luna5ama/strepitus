@@ -240,6 +240,7 @@ class NoiseGeneratorRenderer(
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
         glViewport(windowWidth - frameWidth, 0, frameWidth, frameHeight)
+        glScissor(0, 0, windowWidth, windowHeight)
         finalBlitShader.bind()
         finalBlitShader.applyBinding(bindings)
         finalBlitShader.uniform3f(
