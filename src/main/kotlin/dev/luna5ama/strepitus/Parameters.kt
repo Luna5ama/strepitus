@@ -1,12 +1,19 @@
 package dev.luna5ama.strepitus
 
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.graphics.vector.*
+import androidx.compose.ui.unit.*
 import dev.luna5ama.glwrapper.enums.ImageFormat
 import io.github.composefluent.*
 import io.github.composefluent.component.*
+import io.github.composefluent.icons.*
+import io.github.composefluent.icons.regular.*
 import java.math.BigDecimal
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
+import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.isSuperclassOf
 import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.full.memberProperties
@@ -34,9 +41,24 @@ fun <T : Any> ParameterEditor(
     val copyFunc = clazz.memberFunctions.first { member -> member.name == "copy" }
     val copyFunParameterOrder = copyFunc.parameters.drop(1).withIndex().associate { it.value.name!! to it.index }
     val properties = clazz.memberProperties.sortedBy { copyFunParameterOrder[it.name] ?: Int.MAX_VALUE }
+    val icon = clazz.companionObject?.let { companion ->
+        companion.memberProperties.firstOrNull { it.name == "icon" }?.getter?.call(companion.objectInstance) as? ImageVector
+    }
+
     Expander(
         expended,
         onExpandedChanged = { expended = it },
+        icon = {
+            if (icon != null) {
+                Spacer(modifier = Modifier.width(FluentTheme.typography.subtitle.fontSize.value.dp * 3.0f))
+                Icon(
+                    imageVector = icon,
+                    contentDescription = "",
+                    modifier = Modifier.size(FluentTheme.typography.subtitle.fontSize.value.dp)
+                )
+            }
+        },
+        modifier = Modifier.padding(8.dp),
         heading = {
             Text(heading, style = FluentTheme.typography.subtitle)
         }
@@ -78,6 +100,7 @@ fun <T : Any> ParameterEditor(
                                 onChange = newParameterFunc
                             )
                         }
+
                         Enum::class.isSuperclassOf(propType) -> {
                             var enumDropdownExpanded by remember { mutableStateOf(false) }
                             DropDownButton(
@@ -120,7 +143,11 @@ data class MainParameters(
     val width: Int = 512,
     val height: Int = 512,
     val slices: Int = 1
-)
+) {
+    companion object {
+        val icon = Icons.Default.Image
+    }
+}
 
 enum class Format(val value: ImageFormat.Sized) {
     R8_UN(ImageFormat.R8_UN),
@@ -146,7 +173,11 @@ data class OutputProcessingParameters(
     val maxVal: BigDecimal = 1.0.toBigDecimal(),
     val flip: Boolean = false,
     val dither: Boolean = true,
-)
+) {
+    companion object {
+        val icon = Icons.Default.Filter
+    }
+}
 
 data class ViewerParameters(
     @DisplayName("Center X")
@@ -155,7 +186,11 @@ data class ViewerParameters(
     val centerY: BigDecimal = 0.0.toBigDecimal(),
     val slice: BigDecimal = 0.0.toBigDecimal(),
     val zoom: BigDecimal = 0.0.toBigDecimal(),
-)
+) {
+    companion object {
+        val icon = Icons.Default.Eye
+    }
+}
 
 enum class DarkModeOption {
     Auto,
@@ -166,3 +201,36 @@ enum class DarkModeOption {
 data class SystemParameters(
     val darkMode: DarkModeOption = DarkModeOption.Auto,
 )
+
+enum class CompositeMode {
+    Add,
+    Subtract,
+    Multiply
+}
+
+data class NoiseLayerParameters<T : NoiseSpecificParameters>(
+    val enabled: Boolean,
+    val compositeMode: CompositeMode,
+    val specificParameters: T,
+)
+
+enum class DistanceFunction {
+    Euclidean,
+    Manhattan,
+    Chebyshev
+}
+
+@Immutable
+sealed interface NoiseSpecificParameters {
+    data class Perlin(
+        val rotated: Boolean = false,
+    ) : NoiseSpecificParameters
+
+    data class Simplex(
+        val rotated: Boolean = false,
+    ) : NoiseSpecificParameters
+
+    data class Worley(
+        val distanceFunction: DistanceFunction = DistanceFunction.Euclidean,
+    )
+}

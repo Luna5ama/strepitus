@@ -25,6 +25,8 @@ fun App() {
     var viewerParameters by remember { mutableStateOf(ViewerParameters()) }
     var systemParameters by remember { mutableStateOf(SystemParameters()) }
 
+    val noiseLayers = remember { mutableStateListOf<Int>() }
+
     val darkMode = when (systemParameters.darkMode) {
         DarkModeOption.Auto -> isSystemInDarkTheme()
         DarkModeOption.Light -> false
@@ -66,7 +68,7 @@ fun App() {
             ) {
                 Column(
                     modifier = Modifier
-                        .width(320.dp)
+                        .width(480.dp)
                         .fillMaxHeight()
                         .padding(8.dp)
                         .verticalScroll(scrollState)
@@ -91,11 +93,9 @@ fun App() {
                                 { viewerParameters = it }
                             )
                         }
-
                         SideNavItem.Noise -> {
 
                         }
-
                         SideNavItem.Setting -> {
                             ParameterEditor(
                                 systemParameters,
