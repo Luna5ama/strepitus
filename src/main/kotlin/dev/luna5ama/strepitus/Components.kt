@@ -64,6 +64,7 @@ fun SliderIntegerInput(
     value: Int,
     sliderMin: Int,
     sliderMax: Int,
+    sliderStep: Int,
     onValueChange: (Int) -> Unit,
     enabled: Boolean = true,
 ) {
@@ -71,20 +72,6 @@ fun SliderIntegerInput(
     var typedValue by remember(value) { mutableStateOf(value.toString()) }
     var fieldFocus by remember { mutableStateOf(false) }
 
-    val steps = (sliderMax - sliderMin - 1).coerceAtLeast(0)
-    val sliderState = remember(fieldFocus) {
-        SliderState(
-            value.toFloat(),
-            steps,
-            true,
-            { },
-            sliderMin.toFloat()..sliderMax.toFloat()
-        )
-    }
-    sliderState.value = value.toFloat()
-    sliderStateOnValueChangeProp.set(sliderState) {
-        onValueChange(sliderState.nearestValue().toInt())
-    }
     Expander(
         expanded = expanded,
         onExpandedChanged = { expanded = it },
@@ -111,6 +98,20 @@ fun SliderIntegerInput(
             )
         }
     ) {
+        val steps = max((sliderMax - sliderMin - 1) / sliderStep, 1)
+        val sliderState = remember(fieldFocus) {
+            SliderState(
+                value.toFloat(),
+                steps,
+                true,
+                { },
+                sliderMin.toFloat()..sliderMax.toFloat()
+            )
+        }
+        sliderState.value = value.toFloat()
+        sliderStateOnValueChangeProp.set(sliderState) {
+            onValueChange(sliderState.nearestValue().toInt())
+        }
         CardExpanderItem(heading = {}) {
             Slider(
                 state = sliderState,
@@ -163,22 +164,6 @@ fun SliderDecimalInput(
     var typedValue by remember(value) { mutableStateOf(value.toString()) }
     var fieldFocus by remember { mutableStateOf(false) }
 
-    val steps = max(((sliderMax - sliderMin) / sliderStep).toInt() - 1, 1)
-    val sliderState = remember(fieldFocus) {
-        SliderState(
-            value.toFloat(),
-            steps,
-            true,
-            { },
-            sliderMin.toFloat()..sliderMax.toFloat()
-        )
-    }
-    sliderState.value = value.toFloat()
-    sliderStateOnValueChangeProp.set(sliderState) {
-        val newValue = (sliderState.nearestValue().toBigDecimal() / sliderStep).setScale(0, RoundingMode.HALF_UP) * sliderStep
-        onValueChange(newValue)
-    }
-
     Expander(
         expanded = expanded,
         onExpandedChanged = { expanded = it },
@@ -197,6 +182,7 @@ fun SliderDecimalInput(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 keyboardActions = KeyboardActions.Default,
                 modifier = Modifier.onFocusChanged { state ->
+                    fieldFocus = state.isFocused
                     if (!state.isFocused) {
                         typedValue = value.toString()
                     }
@@ -204,6 +190,21 @@ fun SliderDecimalInput(
             )
         }
     ) {
+        val steps = max(((sliderMax - sliderMin) / sliderStep).toInt() - 1, 1)
+        val sliderState = remember(fieldFocus) {
+            SliderState(
+                value.toFloat(),
+                steps,
+                true,
+                { },
+                sliderMin.toFloat()..sliderMax.toFloat()
+            )
+        }
+        sliderState.value = value.toFloat()
+        sliderStateOnValueChangeProp.set(sliderState) {
+            val newValue = (sliderState.nearestValue().toBigDecimal() / sliderStep).setScale(0, RoundingMode.HALF_UP) * sliderStep
+            onValueChange(newValue)
+        }
         CardExpanderItem(heading = {}) {
             Slider(
                 state = sliderState,

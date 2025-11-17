@@ -1,7 +1,5 @@
 package dev.luna5ama.strepitus.params
 
-import io.github.composefluent.icons.Icons
-import io.github.composefluent.icons.regular.Eye
 import java.math.BigDecimal
 
 
@@ -18,6 +16,8 @@ data class ViewerParameters(
     val centerX: BigDecimal = 0.0.toBigDecimal(),
     @DisplayName("Center Y")
     val centerY: BigDecimal = 0.0.toBigDecimal(),
+    @DecimalRangeVal(min = 0.0, max = 256.0, step = 0.5)
     val slice: BigDecimal = 0.0.toBigDecimal(),
+    @DecimalRangeVal(min = -4.0, max = 4.0, step = 0.03125)
     val zoom: BigDecimal = 0.0.toBigDecimal(),
 )

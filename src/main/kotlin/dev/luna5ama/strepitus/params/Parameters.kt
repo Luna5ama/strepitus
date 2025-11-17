@@ -78,6 +78,7 @@ private fun ParameterField(
                     value = propValue as Int,
                     sliderMin = intRangeAnn.min,
                     sliderMax = intRangeAnn.max,
+                    sliderStep = intRangeAnn.step,
                     onValueChange = newParameterFunc
                 )
             } else {
@@ -162,7 +163,7 @@ val KAnnotatedElement.displayName: String?
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class IntRangeVal(val min: Int, val max: Int)
+annotation class IntRangeVal(val min: Int, val max: Int, val step: Int = 1)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)

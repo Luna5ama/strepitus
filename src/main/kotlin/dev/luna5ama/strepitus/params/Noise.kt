@@ -25,9 +25,9 @@ data class NoiseLayerParameters(
     val baseFrequency: Int = 4,
     @IntRangeVal(min = 1, max = 16)
     val octaves: Int = 4,
-    @DecimalRangeVal(min = -2.0, max = 2.0, step = 0.05)
+    @DecimalRangeVal(min = -2.0, max = 2.0, step = 0.03125)
     val persistence: BigDecimal = 0.5.toBigDecimal(),
-    @DecimalRangeVal(min = 1.0, max = 4.0, step = 0.05)
+    @DecimalRangeVal(min = 1.0, max = 4.0, step = 0.03125)
     val lacunarity: BigDecimal = 2.0.toBigDecimal(),
     val specificParameters: NoiseSpecificParameters = NoiseSpecificParameters.Simplex(),
     @Transient
