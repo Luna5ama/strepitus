@@ -7,7 +7,7 @@
 uniform vec3 uval_noiseTexSizeF;
 uniform float uval_slice;
 uniform float uval_zoom;
-uniform int uval_colorMode;
+uniform int uval_colorMode; // 0: RGB, 1: Alpha, 2: Grayscale
 uniform int uval_tilling;
 uniform vec2 uval_offset;
 
@@ -38,11 +38,11 @@ void main() {
     }
 
     if (uval_colorMode == 0) {
-        fragColor.rgb = noiseV.rrr;
+        fragColor.rgb = noiseV.rgb;
     } else if (uval_colorMode == 1) {
         fragColor.rgb = noiseV.aaa;
     } else {
-        fragColor.rgb = noiseV.rgb;
+        fragColor.rgb = noiseV.rrr;
     }
 
     fragColor.a = 1.0;

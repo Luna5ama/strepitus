@@ -18,6 +18,7 @@ import dev.luna5ama.strepitus.gl.register
 import dev.luna5ama.strepitus.params.GPUFormat
 import dev.luna5ama.strepitus.params.MainParameters
 import dev.luna5ama.strepitus.params.NoiseLayerParameters
+import dev.luna5ama.strepitus.params.NoiseSpecificParameters
 import dev.luna5ama.strepitus.params.OutputParameters
 import dev.luna5ama.strepitus.params.ViewerParameters
 import kotlinx.coroutines.CoroutineScope
@@ -193,6 +194,10 @@ class NoiseGeneratorRenderer(
                 mainParameters.height.toFloat(),
                 mainParameters.slices.toFloat()
             )
+
+            val gradientMode = (it.specificParameters as? NoiseSpecificParameters.HasGradient)?.gradientMode?.ordinal ?: 0
+            generateNoiseShader.uniform1i("uval_gradientMode", gradientMode)
+
             generateNoiseShader.uniform1i("uval_baseFrequency", it.baseFrequency)
             generateNoiseShader.uniform1i("uval_octaves", it.octaves)
             generateNoiseShader.uniform1f("uval_lacunarity", it.lacunarity.toFloat())

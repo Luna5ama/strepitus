@@ -47,34 +47,47 @@ enum class NoiseType {
     Worley
 }
 
+enum class GradientMode {
+    Value,
+    Gradient,
+    Both
+}
+
 @Immutable
 sealed interface NoiseSpecificParameters {
     val type: NoiseType
 
+    sealed interface HasGradient : NoiseSpecificParameters {
+        val gradientMode: GradientMode
+    }
+
     data class Value(
-        val value: BigDecimal = 0.0.toBigDecimal(),
-    ) : NoiseSpecificParameters {
+        override val gradientMode: GradientMode = GradientMode.Value,
+    ) : NoiseSpecificParameters, HasGradient {
         override val type: NoiseType
             get() = NoiseType.Value
     }
 
     data class Perlin(
-        val rotated: Boolean = false,
-    ) : NoiseSpecificParameters {
+        override val gradientMode: GradientMode = GradientMode.Value,
+    ) : NoiseSpecificParameters, HasGradient {
         override val type: NoiseType
             get() = NoiseType.Perlin
     }
 
     data class Simplex(
-        val rotated: Boolean = false,
-    ) : NoiseSpecificParameters {
+        override val gradientMode: GradientMode = GradientMode.Value,
+    ) : NoiseSpecificParameters, HasGradient {
         override val type: NoiseType
             get() = NoiseType.Simplex
     }
 
     data class Worley(
         val distanceFunction: DistanceFunction = DistanceFunction.Euclidean,
-    )
+    ) : NoiseSpecificParameters {
+        override val type: NoiseType
+            get() = NoiseType.Worley
+    }
 }
 
 @Composable

@@ -4,13 +4,13 @@ import java.math.BigDecimal
 
 
 enum class DisplayColorMode {
-    Grayscale,
-    Alpha,
     RGB,
+    Alpha,
+    Grayscale,
 }
 
 data class ViewerParameters(
-    val colorMode: DisplayColorMode = DisplayColorMode.Grayscale,
+    val colorMode: DisplayColorMode = DisplayColorMode.RGB,
     val tilling: Boolean = false,
     @DisplayName("Center X")
     val centerX: BigDecimal = 0.0.toBigDecimal(),

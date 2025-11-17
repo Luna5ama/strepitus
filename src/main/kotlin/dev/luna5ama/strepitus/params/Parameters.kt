@@ -1,23 +1,17 @@
 package dev.luna5ama.strepitus.params
 
 import androidx.compose.runtime.*
-import dev.luna5ama.strepitus.DecimalInput
-import dev.luna5ama.strepitus.IntegerInput
-import dev.luna5ama.strepitus.SliderDecimalInput
-import dev.luna5ama.strepitus.SliderIntegerInput
-import dev.luna5ama.strepitus.ToggleSwitch
-import dev.luna5ama.strepitus.camelCaseToWords
-import dev.luna5ama.strepitus.params.displayName
+import dev.luna5ama.strepitus.*
 import io.github.composefluent.component.*
 import kotlinx.serialization.Transient
 import java.math.BigDecimal
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
-import kotlin.reflect.KProperty1
 import kotlin.reflect.full.isSuperclassOf
 import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.javaField
 
 @Composable
 inline fun <reified T : Any> ParameterEditor(
@@ -40,6 +34,7 @@ fun <T : Any> ParameterEditor(
     val copyFunParameterOrder = copyFunc.parameters.drop(1).withIndex().associate { it.value.name!! to it.index }
     val properties = clazz.memberProperties
         .filter { it.annotations.none { ann -> ann is Transient } }
+        .filter { it.javaField != null }
         .sortedBy { copyFunParameterOrder[it.name] ?: Int.MAX_VALUE }
 
     properties.forEachIndexed { index, it ->
@@ -116,9 +111,9 @@ private fun ParameterField(
         }
 
         else -> when {
-            propType.isData -> {
+            propType.isData || propValue::class.isData -> {
                 ParameterEditor(
-                    clazz = propType,
+                    clazz = propValue::class as KClass<Any>,
                     parameters = propValue,
                     onChange = newParameterFunc
                 )

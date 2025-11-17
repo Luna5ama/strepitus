@@ -11,6 +11,9 @@ layout(local_size_x = 16, local_size_y = 16) in;
 layout(rgba32f) uniform restrict image3D uimg_noiseImage;
 
 uniform vec3 uval_noiseTexSizeF;
+
+uniform int uval_gradientMode; // 0: value, 1: gradient, 2: both
+
 uniform int uval_baseFrequency;
 uniform int uval_octaves;
 uniform float uval_lacunarity;
@@ -92,8 +95,10 @@ void main() {
             noiseV = simplexNoise3(noisePos, int(freq), hash11(k++) * PI_2);
         }
 
-        if (true) {
+        if (uval_gradientMode == 0) {
             noiseV = noiseV.aaaa;
+        } else if (uval_gradientMode == 1) {
+            noiseV = noiseV.rgbb;
         }
 
         v += amp * noiseV;
