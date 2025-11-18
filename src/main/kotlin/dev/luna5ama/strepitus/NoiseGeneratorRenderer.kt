@@ -6,30 +6,22 @@ import dev.luna5ama.glwrapper.ShaderBindingSpecs
 import dev.luna5ama.glwrapper.ShaderProgram
 import dev.luna5ama.glwrapper.ShaderSource
 import dev.luna5ama.glwrapper.base.*
-import dev.luna5ama.glwrapper.enums.BufferTarget
-import dev.luna5ama.glwrapper.enums.FilterMode
-import dev.luna5ama.glwrapper.enums.GLObjectType
-import dev.luna5ama.glwrapper.enums.ImageFormat
-import dev.luna5ama.glwrapper.enums.WrapMode
+import dev.luna5ama.glwrapper.enums.*
 import dev.luna5ama.glwrapper.objects.BufferObject
 import dev.luna5ama.glwrapper.objects.IGLObject
 import dev.luna5ama.glwrapper.objects.TextureObject
+import dev.luna5ama.kmogus.Arr
 import dev.luna5ama.strepitus.gl.register
-import dev.luna5ama.strepitus.params.GPUFormat
-import dev.luna5ama.strepitus.params.MainParameters
-import dev.luna5ama.strepitus.params.NoiseLayerParameters
-import dev.luna5ama.strepitus.params.NoiseSpecificParameters
-import dev.luna5ama.strepitus.params.OutputParameters
-import dev.luna5ama.strepitus.params.ViewerParameters
+import dev.luna5ama.strepitus.params.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.apache.commons.rng.simple.RandomSource
 import org.jetbrains.skiko.FrameDispatcher
 import org.lwjgl.glfw.GLFW.GLFW_KEY_F6
 import org.lwjgl.glfw.GLFW.GLFW_RELEASE
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.collections.forEach
 import kotlin.math.pow
 
 class NoiseGeneratorRenderer(
@@ -74,6 +66,11 @@ class NoiseGeneratorRenderer(
         allocate(16L, 0)
     }
 
+    private val seedBuffer = register(BufferObject.Immutable()).apply {
+        label = "seedBuffer"
+        allocate(4L * GRID_SEED_COUNT, GL_DYNAMIC_STORAGE_BIT)
+    }
+
     private val bindings = ShaderBindingSpecs.of {
         image("uimg_noiseImage", noiseImage)
         image("uimg_outputImage", outputImage)
@@ -87,6 +84,7 @@ class NoiseGeneratorRenderer(
             borderColor(0.0f, 0.0f, 0.0f, 0.0f)
         })
         buffer("DataBuffer", dataBuffer, BufferTarget.ShaderStorage)
+        buffer("SeedBuffer", seedBuffer, BufferTarget.ShaderStorage)
     }
 
     private var generateNoiseShader: ShaderProgram? = null
@@ -184,31 +182,40 @@ class NoiseGeneratorRenderer(
         resetCounterShader.applyBinding(bindings)
         glDispatchCompute(1, 1, 1)
 
-        noiseLayers.forEach {
-            if (!it.enabled) return@forEach
-            generateNoiseShader.bind()
-            generateNoiseShader.applyBinding(bindings)
-            generateNoiseShader.uniform3f(
-                "uval_noiseTexSizeF",
-                mainParameters.width.toFloat(),
-                mainParameters.height.toFloat(),
-                mainParameters.slices.toFloat()
-            )
+        Arr.malloc(seedBuffer.size).use { seedUploadBuffer ->
+            noiseLayers.forEach { layer ->
+                if (!layer.enabled) return@forEach
 
-            generateNoiseShader.uniform1i("uval_noiseType", it.specificParameters.type.ordinal)
-            generateNoiseShader.uniform1i("uval_dimensionType", it.dimensionType.ordinal)
-            val gradientMode = (it.specificParameters as? NoiseSpecificParameters.HasGradient)?.gradientMode?.ordinal ?: 0
-            generateNoiseShader.uniform1i("uval_gradientMode", gradientMode)
+                val rng = RandomSource.XO_RO_SHI_RO_1024_PP.create(sha512(layer.baseSeed))
 
-            generateNoiseShader.uniform1i("uval_baseFrequency", it.fbmParameters.baseFrequency)
-            generateNoiseShader.uniform1i("uval_octaves", it.fbmParameters.octaves)
-            generateNoiseShader.uniform1f("uval_lacunarity", it.fbmParameters.lacunarity.toFloat())
-            generateNoiseShader.uniform1f("uval_persistence", it.fbmParameters.persistence.toFloat())
-            generateNoiseShader.uniform1i("uval_compositeMode", it.compositeMode.ordinal)
+                var ptr = seedUploadBuffer.ptr
+                repeat(GRID_SEED_COUNT) {
+                    ptr = ptr.setIntInc(rng.nextInt())
+                }
 
-            glDispatchCompute(mainParameters.width / 16, mainParameters.height / 16, mainParameters.slices)
-            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
+                seedBuffer.invalidate()
+                seedBuffer.upload(seedUploadBuffer.ptr)
+
+                generateNoiseShader.bind()
+                generateNoiseShader.applyBinding(bindings)
+                generateNoiseShader.uniform3f(
+                    "uval_noiseTexSizeF",
+                    mainParameters.width.toFloat(),
+                    mainParameters.height.toFloat(),
+                    mainParameters.slices.toFloat()
+                )
+
+                layer.applyShaderUniforms(generateNoiseShader)
+
+                glDispatchCompute(mainParameters.width / 16, mainParameters.height / 16, mainParameters.slices)
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
+            }
         }
+    }
+
+    private fun sha512(str: String): ByteArray {
+        val digest = java.security.MessageDigest.getInstance("SHA-512")
+        return digest.digest(str.toByteArray(Charsets.UTF_8))
     }
 
     private fun process() {
@@ -288,5 +295,9 @@ class NoiseGeneratorRenderer(
                 }
             }
         }
+    }
+
+    private companion object {
+        const val GRID_SEED_COUNT = 128
     }
 }

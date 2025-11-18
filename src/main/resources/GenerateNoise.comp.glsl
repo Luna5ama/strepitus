@@ -10,6 +10,10 @@
 
 layout(local_size_x = 16, local_size_y = 16) in;
 
+layout(std430) buffer SeedBuffer {
+    uint gridSeed[128];
+} ssbo_seed;
+
 layout(rgba32f) uniform restrict image3D uimg_noiseImage;
 
 uniform vec3 uval_noiseTexSizeF;
@@ -18,10 +22,13 @@ uniform int uval_noiseType;// 0: Value, 1: Perlin, 2: Simplex, 3: Worley
 uniform int uval_dimensionType;// 0: 2D, 1: 3D
 uniform int uval_gradientMode;// 0: value, 1: gradient, 2: both
 
+// FBMParameters
 uniform int uval_baseFrequency;
 uniform int uval_octaves;
 uniform float uval_lacunarity;
 uniform float uval_persistence;
+uniform int uval_perOctaveSeed;
+
 uniform int uval_compositeMode;// 0: none, 1: add, 2: subtract, 3: multiply
 
 vec4 valueNoise2(vec3 p, float freq, float alpha) {
@@ -74,7 +81,8 @@ void main() {
 
     for (int i = 0; i < uval_octaves; ++i) {
         vec4 noiseV = vec4(0.0);
-        float alpha = hash11(k++) * PI_2;
+        uint seedIndex = uval_perOctaveSeed == 0 ? 0 : i;
+        float alpha = hash_uintToFloat(ssbo_seed.gridSeed[seedIndex]) * PI_2;
         if (uval_noiseType == 0) {
             noiseV = uval_dimensionType == 0 ? valueNoise2(noisePos, freq, alpha) : valueNoise3(noisePos, freq, alpha);
         } else if (uval_noiseType == 1) {
