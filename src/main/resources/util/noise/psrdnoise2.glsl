@@ -66,7 +66,7 @@
 // The rotation by alpha uses one single addition. Unlike the 3-D version
 // of psrdnoise(), setting alpha == 0.0 gives no speedup.
 //
-float psrdnoise2(vec2 x, vec2 period, float alpha, out vec2 gradient) {
+float psrdnoise2(vec2 x, vec2 period, float alpha, uint seed, out vec2 gradient) {
 
 	// Transform to simplex space (axis-aligned hexagonal grid)
 	vec2 uv = vec2(x.x + x.y*0.5, x.y);
@@ -118,9 +118,9 @@ float psrdnoise2(vec2 x, vec2 period, float alpha, out vec2 gradient) {
     uvec3 iu3 = uvec3(ivec3(floor(iu)));
     uvec3 iv3 = uvec3(ivec3(floor(iv)));
     uvec3 hash3;
-    hash3.x = hash_21_q5(uvec2(iu3.x, iv3.x));
-    hash3.y = hash_21_q5(uvec2(iu3.y, iv3.y));
-    hash3.z = hash_21_q5(uvec2(iu3.z, iv3.z));
+    hash3.x = hash_31_q5(uvec3(iu3.x, iv3.x, seed));
+    hash3.y = hash_31_q5(uvec3(iu3.y, iv3.y, seed));
+    hash3.z = hash_31_q5(uvec3(iu3.z, iv3.z, seed));
     vec3 hash = vec3(hash3) * (12.5663704 / float(0xffffffffU));
 
 	// Pick a pseudo-random angle and add the desired rotation

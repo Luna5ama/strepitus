@@ -38,8 +38,6 @@ interface ShaderProgramParameters {
 }
 
 data class FBMParameters(
-    @IntRangeVal(min = 1, max = 32)
-    val baseFrequency: Int = 4,
     @IntRangeVal(min = 1, max = 16)
     val octaves: Int = 4,
     @DecimalRangeVal(min = -2.0, max = 2.0, step = 0.03125)
@@ -49,7 +47,6 @@ data class FBMParameters(
     val perOctaveSeed: Boolean = true,
 ) : ShaderProgramParameters {
     override fun applyShaderUniforms(shaderProgram: ShaderProgram) {
-        shaderProgram.uniform1i("uval_baseFrequency", this.baseFrequency)
         shaderProgram.uniform1i("uval_octaves", this.octaves)
         shaderProgram.uniform1f("uval_lacunarity", this.lacunarity.toFloat())
         shaderProgram.uniform1f("uval_persistence", this.persistence.toFloat())
@@ -68,6 +65,8 @@ data class NoiseLayerParameters(
     val compositeMode: CompositeMode = CompositeMode.Add,
     val dimensionType: DimensionType = DimensionType._2D,
     val baseSeed: String,
+    @IntRangeVal(min = 1, max = 32)
+    val baseFrequency: Int = 4,
 
     @DisplayName("FBM Parameters")
     val fbmParameters: FBMParameters = FBMParameters(),
@@ -78,6 +77,8 @@ data class NoiseLayerParameters(
     override fun applyShaderUniforms(shaderProgram: ShaderProgram) {
         shaderProgram.uniform1i("uval_compositeMode", this.compositeMode.ordinal)
         shaderProgram.uniform1i("uval_dimensionType", this.dimensionType.ordinal)
+
+        shaderProgram.uniform1i("uval_baseFrequency", this.baseFrequency)
 
         this.fbmParameters.applyShaderUniforms(shaderProgram)
         this.specificParameters.applyShaderUniforms(shaderProgram)

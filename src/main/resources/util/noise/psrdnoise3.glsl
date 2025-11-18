@@ -92,7 +92,7 @@ vec4 permute(vec4 x) {
 // eliminate the code for computing it. This speeds up the function by
 // around 10%.
 //
-float psrdnoise3(vec3 x, vec3 period, float alpha, out vec3 gradient)
+float psrdnoise3(vec3 x, vec3 period, float alpha, uint seed, out vec3 gradient)
 {
 
 #ifndef PERLINGRID
@@ -207,10 +207,10 @@ float psrdnoise3(vec3 x, vec3 period, float alpha, out vec3 gradient)
     uvec3 i3u = uvec3(ivec3(i3));
 
     uvec4 hashV;
-    hashV.x = hash_31_q5(uvec3(ivec3(i0u.z, i0u.y, i0u.x)));
-    hashV.y = hash_31_q5(uvec3(ivec3(i1u.z, i1u.y, i1u.x)));
-    hashV.z = hash_31_q5(uvec3(ivec3(i2u.z, i2u.y, i2u.x)));
-    hashV.w = hash_31_q5(uvec3(ivec3(i3u.z, i3u.y, i3u.x)));
+    hashV.x = hash_41_q5(uvec4(ivec3(i0u.z, i0u.y, i0u.x), seed));
+    hashV.y = hash_41_q5(uvec4(ivec3(i1u.z, i1u.y, i1u.x), seed));
+    hashV.z = hash_41_q5(uvec4(ivec3(i2u.z, i2u.y, i2u.x), seed));
+    hashV.w = hash_41_q5(uvec4(ivec3(i3u.z, i3u.y, i3u.x), seed));
     vec4 hash = vec4(hashV) * (288.0 / float(0xffffffffU));
 
   // Compute generating gradients from a Fibonacci spiral on the unit sphere
