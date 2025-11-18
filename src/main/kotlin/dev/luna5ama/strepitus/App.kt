@@ -128,7 +128,7 @@ fun App(renderer: NoiseGeneratorRenderer) {
                                     systemParameters,
                                     { systemParameters = it }
                                 )
-                                CardExpanderItem(heading = { }) {
+                                CardExpanderItem(heading = { }, icon = null) {
                                     Button(
                                         onClick = { renderer.reloadShaders() },
                                         buttonColors = ButtonDefaults.accentButtonColors()

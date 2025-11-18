@@ -77,6 +77,7 @@ fun SliderIntegerInput(
         expanded = expanded,
         onExpandedChanged = { expanded = it },
         heading = { Text(name) },
+        icon = null,
         trailing = {
             TextField(
                 value = typedValue,
@@ -169,6 +170,7 @@ fun SliderDecimalInput(
         expanded = expanded,
         onExpandedChanged = { expanded = it },
         heading = { Text(name) },
+        icon = null,
         trailing = {
             TextField(
                 value = typedValue,

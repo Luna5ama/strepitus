@@ -1,6 +1,9 @@
 package dev.luna5ama.strepitus.params
 
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.unit.*
 import dev.luna5ama.strepitus.*
 import io.github.composefluent.component.*
 import kotlinx.serialization.Transient
@@ -67,7 +70,7 @@ private fun ParameterField(
     when (val propType = prop.returnType.classifier!! as KClass<Any>) {
 
         String::class -> {
-            CardExpanderItem(heading = { Text(propName) }) {
+            CardExpanderItem(heading = { Text(propName) }, icon = null) {
                 StringInput(
                     value = propValue as String,
                     onValueChange = newParameterFunc
@@ -87,7 +90,7 @@ private fun ParameterField(
                     onValueChange = newParameterFunc
                 )
             } else {
-                CardExpanderItem(heading = { Text(propName) }) {
+                CardExpanderItem(heading = { Text(propName) }, icon = null) {
                     IntegerInput(value = propValue as Int, onValueChange = newParameterFunc)
                 }
             }
@@ -105,14 +108,14 @@ private fun ParameterField(
                     onValueChange = newParameterFunc
                 )
             } else {
-                CardExpanderItem(heading = { Text(propName) }) {
+                CardExpanderItem(heading = { Text(propName) }, icon = null) {
                     DecimalInput(value = propValue as BigDecimal, onValueChange = newParameterFunc)
                 }
             }
         }
 
         Boolean::class -> {
-            CardExpanderItem(heading = { Text(propName) }) {
+            CardExpanderItem(heading = { Text(propName) }, icon = null) {
                 ToggleSwitch(
                     checked = propValue as Boolean,
                     onCheckStateChange = newParameterFunc
@@ -122,22 +125,28 @@ private fun ParameterField(
 
         else -> when {
             propType.isData || propValue::class.isData -> {
-                var expanded by remember { mutableStateOf(false) }
-                Expander(
-                    expanded = expanded,
-                    onExpandedChanged = { expanded = it },
-                    heading = { Text(propName) }
-                ) {
-                    ParameterEditor(
-                        clazz = propValue::class as KClass<Any>,
-                        parameters = propValue,
-                        onChange = newParameterFunc
-                    )
-                }
+                CardExpanderItem(
+                    heading = {
+                        var expanded by remember { mutableStateOf(false) }
+                        Expander(
+                            expanded = expanded,
+                            onExpandedChanged = { expanded = it },
+                            heading = { Text(propName) },
+                            icon = null,
+                            modifier = Modifier.padding(end = 16.dp)
+                        ) {
+                            ParameterEditor(
+                                clazz = propValue::class as KClass<Any>,
+                                parameters = propValue,
+                                onChange = newParameterFunc
+                            )
+                        }
+                    }, icon = null
+                )
             }
 
             Enum::class.isSuperclassOf(propType) -> {
-                CardExpanderItem(heading = { Text(propName) }) {
+                CardExpanderItem(heading = { Text(propName) }, icon = null) {
                     EnumDropdownMenu(
                         propValue as Enum<*>,
                         propType as KClass<Enum<*>>,
