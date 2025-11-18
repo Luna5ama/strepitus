@@ -1,12 +1,13 @@
 [versions]
 kotlin = "2.2.21"
+kotlinxSerialization = "1.8.1"
+kotlinx-coroutines = "1.9.0"
 
 compose = "1.9.1"
 compose-fluent = "v0.1.0"
 compose-hot-reload = "1.0.0-rc03"
 collectionJvm = "1.5.0"
 
-kotlinx-coroutines = "1.9.0"
 
 fastutil = "8.5.18"
 
@@ -19,6 +20,7 @@ kmogus = "1.1-SNAPSHOT"
 lwjgl3Awt = "0.2.3"
 
 [plugins]
+kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 compose-hotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "compose-hot-reload" }
@@ -27,6 +29,9 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 [libraries]
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+
+kotlinxSerializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 
 fastutil = { module = "it.unimi.dsi:fastutil", version.ref = "fastutil" }
 

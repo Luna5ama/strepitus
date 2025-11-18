@@ -1,5 +1,8 @@
 package dev.luna5ama.strepitus.params
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class MainParameters(
     @IntRangeVal(min = 32, max = 2048, step = 32)
     val width: Int = 512,

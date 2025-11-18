@@ -1,3 +1,5 @@
+@file:UseSerializers(BigDecimalSerializer::class)
+
 package dev.luna5ama.strepitus.params
 
 import androidx.compose.foundation.layout.*
@@ -7,12 +9,17 @@ import androidx.compose.ui.*
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.util.*
 import dev.luna5ama.glwrapper.ShaderProgram
+import dev.luna5ama.strepitus.BigDecimalSerializer
 import dev.luna5ama.strepitus.EnumDropdownMenu
 import dev.luna5ama.strepitus.ToggleSwitch
 import io.github.composefluent.*
 import io.github.composefluent.component.*
 import io.github.composefluent.icons.*
 import io.github.composefluent.icons.regular.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+import kotlinx.serialization.UseSerializers
 import org.apache.commons.rng.simple.RandomSource
 import java.math.BigDecimal
 import java.util.*
@@ -27,7 +34,10 @@ enum class CompositeMode {
 }
 
 enum class DimensionType(override val displayName: String) : DisplayNameOverride {
+    @SerialName("2D")
     _2D("2D"),
+
+    @SerialName("3D")
     _3D("3D"),
 }
 
@@ -37,6 +47,7 @@ interface ShaderProgramParameters {
     fun applyShaderUniforms(shaderProgram: ShaderProgram)
 }
 
+@Serializable
 data class FBMParameters(
     @IntRangeVal(min = 1, max = 16)
     val octaves: Int = 4,
@@ -54,6 +65,7 @@ data class FBMParameters(
     }
 }
 
+@Serializable
 data class NoiseLayerParameters(
     @Transient
     @HiddenFromAutoParameter
@@ -125,6 +137,7 @@ enum class DistanceFunction {
     Chebyshev
 }
 
+@Serializable
 enum class NoiseType(
     val defaultParameter: NoiseSpecificParameters,
     val copyFunc: KFunction<NoiseSpecificParameters>,
@@ -160,6 +173,7 @@ enum class GradientMode {
     Both
 }
 
+@Serializable
 @Immutable
 sealed interface NoiseSpecificParameters : ShaderProgramParameters {
     val type: NoiseType
@@ -187,6 +201,7 @@ sealed interface NoiseSpecificParameters : ShaderProgramParameters {
         }
     }
 
+    @Serializable
     data class Value(
         override val gradientMode: GradientMode = GradientMode.Value,
     ) : NoiseSpecificParameters, HasGradient {
@@ -194,6 +209,7 @@ sealed interface NoiseSpecificParameters : ShaderProgramParameters {
             get() = NoiseType.Value
     }
 
+    @Serializable
     data class Perlin(
         override val gradientMode: GradientMode = GradientMode.Value,
     ) : NoiseSpecificParameters, HasGradient {
@@ -201,6 +217,7 @@ sealed interface NoiseSpecificParameters : ShaderProgramParameters {
             get() = NoiseType.Perlin
     }
 
+    @Serializable
     data class Simplex(
         override val gradientMode: GradientMode = GradientMode.Value,
     ) : NoiseSpecificParameters, HasGradient {
@@ -208,6 +225,7 @@ sealed interface NoiseSpecificParameters : ShaderProgramParameters {
             get() = NoiseType.Simplex
     }
 
+    @Serializable
     data class Worley(
         val distanceFunction: DistanceFunction = DistanceFunction.Euclidean,
     ) : NoiseSpecificParameters {

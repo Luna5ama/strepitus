@@ -119,7 +119,14 @@ fun main() {
 
     val frameDispatcher = FrameDispatcher(glfwDispatcher) { renderFunc() }
     val state = GLFWWindowState()
-    val renderer = NoiseGeneratorRenderer(scope, frameDispatcher, state::windowWidth, state::windowHeight)
+    val appState = AppState()
+    appState.load()
+
+    Runtime.getRuntime().addShutdownHook(Thread {
+        appState.save()
+    })
+
+    val renderer = NoiseGeneratorRenderer(scope, frameDispatcher, appState, state::windowWidth, state::windowHeight)
     val readingStatesOnRender = mutableScatterSetOf<Any>()
 
     val applyObserverHandle: ObserverHandle = Snapshot.registerApplyObserver { changedStates, _ ->
@@ -177,7 +184,7 @@ fun main() {
     }
 
     composeScene.subscribeToGLFWEvents(windowHandle, renderer)
-    composeScene.setContent { App(renderer) }
+    composeScene.setContent { App(renderer, appState) }
     glfwShowWindow(windowHandle)
 
     glfwDispatcher.runLoop()

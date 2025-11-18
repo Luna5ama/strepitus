@@ -1,7 +1,11 @@
+@file:UseSerializers(BigDecimalSerializer::class)
 package dev.luna5ama.strepitus.params
 
 import dev.luna5ama.glwrapper.base.*
 import dev.luna5ama.glwrapper.enums.ImageFormat
+import dev.luna5ama.strepitus.BigDecimalSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
 import java.math.BigDecimal
 
 enum class GPUFormat(val value: ImageFormat.Sized, val glslFormat: String) {
@@ -97,7 +101,7 @@ enum class Format(val gpuFormat: GPUFormat, val outputSpec: OutputSpec) {
     ),
 }
 
-
+@Serializable
 data class OutputParameters(
     val format: Format = Format.R8G8B8A8_UNORM,
     val normalize: Boolean = true,

@@ -1,3 +1,4 @@
+@file:UseSerializers(BigDecimalSerializer::class)
 package dev.luna5ama.strepitus.params
 
 import androidx.compose.foundation.layout.*
@@ -7,6 +8,7 @@ import androidx.compose.ui.unit.*
 import dev.luna5ama.strepitus.*
 import io.github.composefluent.component.*
 import kotlinx.serialization.Transient
+import kotlinx.serialization.UseSerializers
 import java.math.BigDecimal
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass

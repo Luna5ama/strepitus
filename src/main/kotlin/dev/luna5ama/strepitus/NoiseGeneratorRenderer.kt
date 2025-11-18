@@ -27,22 +27,15 @@ import kotlin.math.pow
 class NoiseGeneratorRenderer(
     private val scope: CoroutineScope,
     private val frameDispatcher: FrameDispatcher,
+    private val appState: AppState,
     private val widthProvider: () -> Int,
     private val heightProvider: () -> Int,
 ) : AbstractRenderer() {
-    lateinit var mainParametersProvider: () -> MainParameters
-    lateinit var outputParametersProvider: () -> OutputParameters
-    lateinit var viewerParametersProvider: () -> ViewerParameters
-    lateinit var noiseLayersProvider: () -> List<NoiseLayerParameters>
 
-    private val mainParameters: MainParameters
-        get() = mainParametersProvider()
-    private val outputParameters: OutputParameters
-        get() = outputParametersProvider()
-    private val viewerParameters: ViewerParameters
-        get() = viewerParametersProvider()
-    private val noiseLayers: List<NoiseLayerParameters>
-        get() = noiseLayersProvider()
+    private val mainParameters: MainParameters by appState::mainParameters
+    private val outputParameters: OutputParameters by appState::outputParameters
+    private val viewerParameters: ViewerParameters by appState::viewerParameters
+    private val noiseLayers: List<NoiseLayerParameters> by appState::noiseLayers
 
     var frameWidth = 0
     var frameHeight = 0

@@ -5,6 +5,7 @@ version = "0.0.1-SNAPSHOT"
 
 plugins {
     kotlin("jvm") version libs.versions.kotlin
+    alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.compose)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.compose.hotReload)
@@ -49,6 +50,9 @@ dependencies {
     runtimeOnly("org.lwjgl", "lwjgl-opengl", classifier = "natives-windows")
     runtimeOnly("org.lwjgl", "lwjgl-stb", classifier = "natives-windows")
 
+    implementation(libs.kotlinxSerializationCore)
+    implementation(libs.kotlinxSerializationJson)
+
     implementation(libs.fastutil)
     implementation(libs.apache.commons.rng.simple)
 
@@ -62,8 +66,10 @@ dependencies {
     implementation(libs.bundles.kmogus)
 }
 
+val runDir = File(rootDir, "run")
+runDir.mkdir()
 tasks.withType<ComposeHotRun>().configureEach {
     systemProperties["strepitus.devenv"] = true
     systemProperties["strepitus.renderdoc"] = """C:\Program Files\RenderDoc\renderdoc.dll"""
-    workingDir(File(rootDir, "run"))
+    workingDir(runDir)
 }

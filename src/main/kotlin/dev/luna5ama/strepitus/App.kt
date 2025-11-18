@@ -19,26 +19,108 @@ import io.github.composefluent.component.*
 import io.github.composefluent.component.rememberScrollbarAdapter
 import io.github.composefluent.icons.*
 import io.github.composefluent.icons.regular.*
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNamingStrategy
 import java.math.MathContext
 import java.math.RoundingMode
+import kotlin.io.path.Path
+import kotlin.io.path.inputStream
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
 
 val roundingMode = MathContext(4, RoundingMode.FLOOR)
 
+class AppState {
+    var mainParameters by mutableStateOf(MainParameters())
+    val noiseLayers = mutableStateListOf(
+        NoiseLayerParameters(
+            baseSeed = NoiseLayerParameters.generateBaseSeed(0)
+        )
+    )
+    var outputParameters by mutableStateOf(OutputParameters())
+    var viewerParameters by mutableStateOf(ViewerParameters())
+
+    var systemParameters by mutableStateOf(SystemParameters())
+
+    fun load() {
+        runCatching {
+            loadSystem(SYSTEM_CONFIG_PATH)
+        }
+        runCatching {
+            loadNoise(NOISE_CONFIG_PATH)
+        }
+    }
+
+    fun save() {
+        runCatching {
+            saveSystem(SYSTEM_CONFIG_PATH)
+        }
+        runCatching {
+            saveNoise(NOISE_CONFIG_PATH)
+        }
+    }
+
+    fun loadNoise(path: java.nio.file.Path) {
+        path.inputStream().use {
+            val config = JSON.decodeFromString<NoiseConfig>(path.readText())
+            mainParameters = config.mainParameters
+            outputParameters = config.outputParameters
+            viewerParameters = config.viewerParameters
+            noiseLayers.clear()
+            noiseLayers.addAll(config.noiseLayers)
+        }
+    }
+
+    fun saveNoise(path: java.nio.file.Path) {
+        val config = NoiseConfig(
+            mainParameters = mainParameters,
+            noiseLayers = noiseLayers.toList(),
+            outputParameters = outputParameters,
+            viewerParameters = viewerParameters
+        )
+        path.writeText(JSON.encodeToString(config))
+    }
+
+    fun saveSystem(path: java.nio.file.Path) {
+        path.writeText(JSON.encodeToString(systemParameters))
+    }
+
+    fun loadSystem(path: java.nio.file.Path) {
+        systemParameters = JSON.decodeFromString(path.readText())
+    }
+
+    @Serializable
+    data class NoiseConfig(
+        val mainParameters: MainParameters,
+        val noiseLayers: List<NoiseLayerParameters>,
+        val outputParameters: OutputParameters,
+        val viewerParameters: ViewerParameters
+    )
+
+    companion object {
+        val SYSTEM_CONFIG_PATH = Path("system.json")
+        val NOISE_CONFIG_PATH = Path("noise.json")
+
+        @OptIn(ExperimentalSerializationApi::class)
+        val JSON = Json {
+            prettyPrint = true
+            encodeDefaults = true
+            prettyPrintIndent = "    "
+            namingStrategy = JsonNamingStrategy.SnakeCase
+        }
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun App(renderer: NoiseGeneratorRenderer) {
-    var mainParameters by remember { mutableStateOf(MainParameters()) }
-    var outputParameters by remember { mutableStateOf(OutputParameters()) }
-    var viewerParameters by remember { mutableStateOf(ViewerParameters()) }
-    var systemParameters by remember { mutableStateOf(SystemParameters()) }
-
-    val noiseLayers = remember {
-        mutableStateListOf(
-            NoiseLayerParameters(
-                baseSeed = NoiseLayerParameters.generateBaseSeed(0)
-            )
-        )
-    }
+fun App(renderer: NoiseGeneratorRenderer, appState: AppState) {
+    var mainParameters by appState::mainParameters
+    var outputParameters by appState::outputParameters
+    var viewerParameters by appState::viewerParameters
+    var systemParameters by appState::systemParameters
+    val noiseLayers by appState::noiseLayers
 
     val darkMode = when (systemParameters.darkMode) {
         DarkModeOption.Auto -> isSystemInDarkTheme()
@@ -164,11 +246,6 @@ fun App(renderer: NoiseGeneratorRenderer) {
             ) {}
         }
     }
-
-    renderer.mainParametersProvider = { mainParameters }
-    renderer.outputParametersProvider = { outputParameters }
-    renderer.viewerParametersProvider = { viewerParameters }
-    renderer.noiseLayersProvider = { noiseLayers.toList() }
 }
 
 enum class SideNavItem(val icon: ImageVector) {
