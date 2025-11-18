@@ -21,6 +21,11 @@ import org.lwjgl.system.MemoryUtil
 
 @OptIn(InternalComposeUiApi::class)
 fun main() {
+    System.getProperty("strepitus.renderdoc")?.let {
+        println("Loading RenderDoc library: $it")
+        System.load(it)
+    }
+
     val initWidth = 1920
     val initHeight = 1080
 

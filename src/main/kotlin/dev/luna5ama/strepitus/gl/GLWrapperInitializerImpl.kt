@@ -1,8 +1,6 @@
 package dev.luna5ama.strepitus.gl
 
-import dev.luna5ama.glwrapper.base.GLWrapperInitializer
-import dev.luna5ama.glwrapper.base.GLWrapperInitializerLWJGL3
-import dev.luna5ama.glwrapper.base.ShaderPathResolver
+import dev.luna5ama.glwrapper.base.*
 import java.io.File
 import java.net.URI
 
@@ -19,7 +17,7 @@ class GLWrapperInitializerImpl : GLWrapperInitializer by GLWrapperInitializerLWJ
     }
 
     class PathResolverImpl : ShaderPathResolver {
-        private val root = PathImpl(File("src/main/resources").toURI())
+        private val root = PathImpl(File("../src/main/resources").toURI())
 
         override fun resolve(path: String): ShaderPathResolver.Path {
             return PathImpl(root.uri.resolve("./$path"))

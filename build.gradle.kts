@@ -64,4 +64,6 @@ dependencies {
 
 tasks.withType<ComposeHotRun>().configureEach {
     systemProperties["strepitus.devenv"] = true
+    systemProperties["strepitus.renderdoc"] = """C:\Program Files\RenderDoc\renderdoc.dll"""
+    workingDir(File(rootDir, "run"))
 }

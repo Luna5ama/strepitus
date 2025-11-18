@@ -236,10 +236,12 @@ class NoiseGeneratorRenderer(
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)
     }
 
+    private val alwaysRegenerate = System.getProperty("strepitus.alwaysregen").toBoolean()
+
     override fun draw() {
         val generateNoiseShader = generateNoiseShader
         if (generateNoiseShader != null) {
-            if (needRegenerate.getAndSet(false)) {
+            if (alwaysRegenerate || needRegenerate.getAndSet(false)) {
                 needReprocess.set(true)
                 Snapshot.observe(readObserver = readingStatesOnGenerate::add) {
                     generate(generateNoiseShader)
