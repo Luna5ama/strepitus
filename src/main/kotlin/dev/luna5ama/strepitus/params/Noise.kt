@@ -15,6 +15,9 @@ import io.github.composefluent.icons.*
 import io.github.composefluent.icons.regular.*
 import org.apache.commons.rng.simple.RandomSource
 import java.math.BigDecimal
+import java.util.*
+import kotlin.reflect.KFunction
+import kotlin.reflect.full.memberProperties
 
 enum class CompositeMode {
     None,
@@ -114,17 +117,40 @@ data class NoiseLayerParameters(
         }
     }
 }
+
 enum class DistanceFunction {
     Euclidean,
     Manhattan,
     Chebyshev
 }
 
-enum class NoiseType(val defaultParameter: NoiseSpecificParameters) {
-    Value(NoiseSpecificParameters.Value()),
-    Perlin(NoiseSpecificParameters.Perlin()),
-    Simplex(NoiseSpecificParameters.Simplex()),
-    Worley(NoiseSpecificParameters.Worley()),
+enum class NoiseType(
+    val defaultParameter: NoiseSpecificParameters,
+    val copyFunc: KFunction<NoiseSpecificParameters>,
+    val constructor: KFunction<NoiseSpecificParameters>
+) {
+    Value(NoiseSpecificParameters.Value(), NoiseSpecificParameters.Value::copy, NoiseSpecificParameters::Value),
+    Perlin(NoiseSpecificParameters.Perlin(), NoiseSpecificParameters.Perlin::copy, NoiseSpecificParameters::Perlin),
+    Simplex(NoiseSpecificParameters.Simplex(), NoiseSpecificParameters.Simplex::copy, NoiseSpecificParameters::Simplex),
+    Worley(NoiseSpecificParameters.Worley(), NoiseSpecificParameters.Worley::copy, NoiseSpecificParameters::Worley);
+
+    private val propParams = copyFunc.parameters.asSequence()
+        .drop(1)
+        .associateBy { it.name!! }
+
+    private val constructorParams = constructor.parameters.associateBy { it.name!! }
+
+    internal val props = defaultParameter::class.memberProperties.asSequence()
+        .filter { it.name in propParams }
+        .associateBy { it.name }
+
+    internal val mappableValues by lazy {
+        entries.associateWithTo(EnumMap(NoiseType::class.java)) { otherType ->
+            otherType.propParams.keys.intersect(this.propParams.keys).map {
+                otherType.constructorParams[it]!!
+            }
+        }
+    }
 }
 
 enum class GradientMode {
@@ -136,6 +162,16 @@ enum class GradientMode {
 @Immutable
 sealed interface NoiseSpecificParameters : ShaderProgramParameters {
     val type: NoiseType
+
+    fun copyToType(dstType: NoiseType): NoiseSpecificParameters {
+        val src = this
+        val srcType = src.type
+        val args = srcType.mappableValues[dstType]!!.associateWith {
+            srcType.props[it.name]!!.call(src)
+        }
+        val newParam = dstType.constructor.callBy(args)
+        return newParam
+    }
 
     override fun applyShaderUniforms(shaderProgram: ShaderProgram) {
         shaderProgram.uniform1i("uval_noiseType", type.ordinal)
@@ -216,8 +252,9 @@ fun NoiseLayerEditor(
                 EnumDropdownMenu(
                     value = layer.specificParameters.type,
                     onValueChange = { newType ->
-                        if (newType != layer.specificParameters.type) {
-                            layers[i] = layer.copy(specificParameters = newType.defaultParameter)
+                        val currType = layer.specificParameters.type
+                        if (newType != currType) {
+                            layers[i] = layer.copy(specificParameters = layer.specificParameters.copyToType(newType))
                         }
                     },
                     buttonText = {
@@ -294,10 +331,12 @@ fun NoiseLayerEditor(
                 NoiseType.entries.forEach { noiseType ->
                     DropdownMenuItem(
                         onClick = {
-                            layers.add(NoiseLayerParameters(
-                                baseSeed = NoiseLayerParameters.generateBaseSeed(layers.size),
-                                specificParameters = noiseType.defaultParameter
-                            ))
+                            layers.add(
+                                NoiseLayerParameters(
+                                    baseSeed = NoiseLayerParameters.generateBaseSeed(layers.size),
+                                    specificParameters = noiseType.defaultParameter
+                                )
+                            )
                             showAddMenu = false
                         },
                     ) {
