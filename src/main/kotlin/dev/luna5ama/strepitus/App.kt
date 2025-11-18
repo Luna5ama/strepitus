@@ -13,16 +13,7 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.*
 import androidx.compose.ui.layout.*
 import androidx.compose.ui.unit.*
-import dev.luna5ama.strepitus.params.CompositeMode
-import dev.luna5ama.strepitus.params.DarkModeOption
-import dev.luna5ama.strepitus.params.MainParameters
-import dev.luna5ama.strepitus.params.NoiseLayerEditor
-import dev.luna5ama.strepitus.params.NoiseLayerParameters
-import dev.luna5ama.strepitus.params.NoiseSpecificParameters
-import dev.luna5ama.strepitus.params.OutputParameters
-import dev.luna5ama.strepitus.params.ParameterEditor
-import dev.luna5ama.strepitus.params.SystemParameters
-import dev.luna5ama.strepitus.params.ViewerParameters
+import dev.luna5ama.strepitus.params.*
 import io.github.composefluent.*
 import io.github.composefluent.component.*
 import io.github.composefluent.component.rememberScrollbarAdapter
@@ -41,7 +32,9 @@ fun App(renderer: NoiseGeneratorRenderer) {
     var viewerParameters by remember { mutableStateOf(ViewerParameters()) }
     var systemParameters by remember { mutableStateOf(SystemParameters()) }
 
-    val noiseLayers = remember { mutableStateListOf(NoiseLayerParameters()) }
+    val noiseLayers = remember { mutableStateListOf(NoiseLayerParameters(
+        baseSeed = NoiseLayerParameters.generateBaseSeed(0)
+    )) }
 
     val darkMode = when (systemParameters.darkMode) {
         DarkModeOption.Auto -> isSystemInDarkTheme()
@@ -105,18 +98,21 @@ fun App(renderer: NoiseGeneratorRenderer) {
                                     { mainParameters = it }
                                 )
                             }
+
                             SideNavItem.Output -> {
                                 ParameterEditor(
                                     outputParameters,
                                     { outputParameters = it }
                                 )
                             }
+
                             SideNavItem.Viewer -> {
                                 ParameterEditor(
                                     viewerParameters,
                                     { viewerParameters = it }
                                 )
                             }
+
                             SideNavItem.Noise -> {
                                 NoiseLayerEditor(noiseLayers)
                             }
@@ -126,9 +122,9 @@ fun App(renderer: NoiseGeneratorRenderer) {
                                     systemParameters,
                                     { systemParameters = it }
                                 )
-                                CardExpanderItem(heading = {  }) {
+                                CardExpanderItem(heading = { }) {
                                     Button(
-                                        onClick = {renderer.reloadShaders()},
+                                        onClick = { renderer.reloadShaders() },
                                         buttonColors = ButtonDefaults.accentButtonColors()
                                     ) {
                                         Text("Reload Shaders")

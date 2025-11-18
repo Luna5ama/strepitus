@@ -10,6 +10,8 @@ kotlinx-coroutines = "1.9.0"
 
 fastutil = "8.5.18"
 
+apache-commons-rng-simple = "1.6"
+
 lwjgl = "3.3.6"
 joml = "1.10.5"
 glWrapper = "1.1.0"
@@ -27,6 +29,8 @@ kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref =
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 
 fastutil = { module = "it.unimi.dsi:fastutil", version.ref = "fastutil" }
+
+apache-commons-rng-simple = { module = "org.apache.commons:commons-rng-simple", version.ref = "apache-commons-rng-simple" }
 
 collectionJvm = { group = "androidx.collection", name = "collection-jvm", version.ref = "collectionJvm" }
 compose-fluent = { module = "io.github.compose-fluent:fluent", version.ref = "compose-fluent" }

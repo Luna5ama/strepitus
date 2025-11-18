@@ -50,6 +50,8 @@ dependencies {
     runtimeOnly("org.lwjgl", "lwjgl-stb", classifier = "natives-windows")
 
     implementation(libs.fastutil)
+    implementation(libs.apache.commons.rng.simple)
+
     implementation(libs.joml)
     implementation(libs.collectionJvm)
     implementation(libs.compose.fluent)

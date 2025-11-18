@@ -5,12 +5,14 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.*
 import androidx.compose.ui.*
 import androidx.compose.ui.unit.*
+import androidx.compose.ui.util.fastJoinToString
 import dev.luna5ama.strepitus.EnumDropdownMenu
 import dev.luna5ama.strepitus.ToggleSwitch
 import io.github.composefluent.*
 import io.github.composefluent.component.*
 import io.github.composefluent.icons.*
 import io.github.composefluent.icons.regular.*
+import org.apache.commons.rng.simple.RandomSource
 import java.math.BigDecimal
 
 enum class CompositeMode {
@@ -25,13 +27,7 @@ enum class DimensionType(override val displayName: String) : DisplayNameOverride
     _3D("3D"),
 }
 
-data class NoiseLayerParameters(
-    @Transient
-    val visible: Boolean = true,
-    @HiddenFromAutoParameter
-    val enabled: Boolean = true,
-    val compositeMode: CompositeMode = CompositeMode.Add,
-    val dimensionType: DimensionType = DimensionType._2D,
+data class FBMParameters(
     @IntRangeVal(min = 1, max = 32)
     val baseFrequency: Int = 4,
     @IntRangeVal(min = 1, max = 16)
@@ -39,9 +35,55 @@ data class NoiseLayerParameters(
     @DecimalRangeVal(min = -2.0, max = 2.0, step = 0.03125)
     val persistence: BigDecimal = 0.5.toBigDecimal(),
     @DecimalRangeVal(min = 1.0, max = 4.0, step = 0.03125)
-    val lacunarity: BigDecimal = 2.0.toBigDecimal(),
-    val specificParameters: NoiseSpecificParameters = NoiseSpecificParameters.Simplex()
+    val lacunarity: BigDecimal = 2.0.toBigDecimal()
 )
+
+
+data class NoiseLayerParameters(
+    @Transient
+    val visible: Boolean = true,
+    @HiddenFromAutoParameter
+    val enabled: Boolean = true,
+    val compositeMode: CompositeMode = CompositeMode.Add,
+    val dimensionType: DimensionType = DimensionType._2D,
+    val baseSeed: String,
+
+
+    val specificParameters: NoiseSpecificParameters = NoiseSpecificParameters.Simplex()
+) {
+    companion object {
+        @OptIn(ExperimentalUnsignedTypes::class)
+        private val BASE_SEED_SEED = ulongArrayOf(
+            0x37_00_81_3b_4b_b4_9d_d5UL,
+            0xe7_bd_39_c5_04_c4_41_f3UL,
+            0x94_78_59_58_61_f6_09_21UL,
+            0x31_42_83_88_a3_0f_06_71UL,
+            0x5a_bc_6e_02_0e_95_e1_2dUL,
+            0x01_3c_9c_3b_70_34_bb_4eUL,
+            0xab_f4_a0_8e_f7_48_9e_b6UL,
+            0xcc_a9_d9_81_19_3c_34_cdUL,
+            0x59_58_15_24_67_a6_5e_9eUL,
+            0xbf_a8_fd_ab_b2_d9_43_92UL,
+            0x35_79_58_3a_cf_22_64_51UL,
+            0x17_60_f1_e5_80_95_04_c1UL,
+            0xfe_b0_cf_ed_b4_c4_ce_53UL,
+            0x86_5d_d1_3e_04_4b_33_4fUL,
+            0xf2_ce_67_11_cc_a8_3e_98UL,
+            0xd9_13_68_e8_85_4d_93_faUL
+        ).toLongArray()
+
+        private const val HEX_CHARS = "0123456789ABCDEF"
+
+        fun generateBaseSeed(index: Int): String {
+            val newSeed = BASE_SEED_SEED.copyOf()
+            newSeed[0] += index.toLong()
+            val random = RandomSource.XO_RO_SHI_RO_1024_PP.create(newSeed)
+            return (0..<8).map {
+                HEX_CHARS[random.nextInt(HEX_CHARS.length)]
+            }.fastJoinToString("")
+        }
+    }
+}
 
 enum class DistanceFunction {
     Euclidean,
@@ -214,7 +256,10 @@ fun NoiseLayerEditor(
                 NoiseType.entries.forEach { noiseType ->
                     DropdownMenuItem(
                         onClick = {
-                            layers.add(NoiseLayerParameters(specificParameters = noiseType.defaultParameter))
+                            layers.add(NoiseLayerParameters(
+                                baseSeed = NoiseLayerParameters.generateBaseSeed(layers.size),
+                                specificParameters = noiseType.defaultParameter
+                            ))
                             showAddMenu = false
                         },
                     ) {
