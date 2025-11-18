@@ -6,6 +6,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.scene.*
 import androidx.compose.ui.unit.*
+import dev.luna5ama.glwrapper.base.*
 import dev.luna5ama.strepitus.gl.GlfwCoroutineDispatcher
 import dev.luna5ama.strepitus.gl.subscribeToGLFWEvents
 import kotlinx.coroutines.CoroutineScope
@@ -14,6 +15,9 @@ import org.jetbrains.skia.*
 import org.jetbrains.skiko.FrameDispatcher
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.opengl.GL
+import org.lwjgl.opengl.GL43C.glDebugMessageCallback
+import org.lwjgl.opengl.GLDebugMessageCallback
+import org.lwjgl.system.MemoryUtil
 
 @OptIn(InternalComposeUiApi::class)
 fun main() {
@@ -35,6 +39,58 @@ fun main() {
     glfwSetInputMode(windowHandle, GLFW_LOCK_KEY_MODS, GLFW_TRUE)
 
     GL.createCapabilities()
+
+    val devenv = System.getProperty("strepitus.devenv").toBoolean()
+    if (devenv) {
+        println("Running in development environment")
+        glEnable(GL_DEBUG_OUTPUT)
+        glDebugMessageCallback(GLDebugMessageCallback.create { source, type, id, severity, length, message, userParam ->
+            val sourceStr = when (source) {
+                GL_DEBUG_SOURCE_API -> "API"
+                GL_DEBUG_SOURCE_WINDOW_SYSTEM -> "WINDOW_SYSTEM"
+                GL_DEBUG_SOURCE_SHADER_COMPILER -> "SHADER_COMPILER"
+                GL_DEBUG_SOURCE_THIRD_PARTY -> "THIRD_PARTY"
+                GL_DEBUG_SOURCE_APPLICATION -> "APPLICATION"
+                GL_DEBUG_SOURCE_OTHER -> "OTHER"
+                else -> "UNKNOWN"
+            }
+            val typeStr = when (type) {
+                GL_DEBUG_TYPE_ERROR -> "ERROR"
+                GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR -> "DEPRECATED_BEHAVIOR"
+                GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR -> "UNDEFINED_BEHAVIOR"
+                GL_DEBUG_TYPE_PORTABILITY -> "PORTABILITY"
+                GL_DEBUG_TYPE_PERFORMANCE -> "PERFORMANCE"
+                GL_DEBUG_TYPE_MARKER -> "MARKER"
+                GL_DEBUG_TYPE_PUSH_GROUP -> "PUSH_GROUP"
+                GL_DEBUG_TYPE_POP_GROUP -> "POP_GROUP"
+                GL_DEBUG_TYPE_OTHER -> "OTHER"
+                else -> "UNKNOWN"
+            }
+            val severityStr = when (severity) {
+                GL_DEBUG_SEVERITY_HIGH -> "HIGH"
+                GL_DEBUG_SEVERITY_MEDIUM -> "MEDIUM"
+                GL_DEBUG_SEVERITY_LOW -> "LOW"
+                GL_DEBUG_SEVERITY_NOTIFICATION -> "NOTIFICATION"
+                else -> "UNKNOWN"
+            }
+
+            if (type == GL_DEBUG_TYPE_PUSH_GROUP) return@create
+            if (type == GL_DEBUG_TYPE_POP_GROUP) return@create
+            if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return@create
+            if (severity == GL_DEBUG_SEVERITY_LOW) return@create
+            if (severity == GL_DEBUG_SEVERITY_MEDIUM) return@create
+
+            val messageStr = MemoryUtil.memUTF8Safe(message, length) ?: return@create
+            println("[OpenGL/$sourceStr] type = $typeStr, severity = $severityStr, message = $messageStr")
+            run {} // Dummy line for breakpoint
+        }, 0)
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS)
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_MEDIUM, 0, 0L, false)
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, 0L, false)
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW, 0, 0L, false)
+        glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_PUSH_GROUP, GL_DONT_CARE, 0, 0L, false)
+        glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_POP_GROUP, GL_DONT_CARE, 0, 0L, false)
+    }
 
     val context = DirectContext.makeGL()
     var renderTarget = BackendRenderTarget.makeGL(initWidth, initHeight, 1, 8, 0, 0x8058)
@@ -58,7 +114,7 @@ fun main() {
 
     val frameDispatcher = FrameDispatcher(glfwDispatcher) { renderFunc() }
     val state = GLFWWindowState()
-    val renderer = NoiseGeneratorRenderer(scope, frameDispatcher,state::windowWidth, state::windowHeight)
+    val renderer = NoiseGeneratorRenderer(scope, frameDispatcher, state::windowWidth, state::windowHeight)
     val readingStatesOnRender = mutableScatterSetOf<Any>()
 
     val applyObserverHandle: ObserverHandle = Snapshot.registerApplyObserver { changedStates, _ ->
