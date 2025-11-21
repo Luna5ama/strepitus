@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.*
 import androidx.compose.ui.layout.*
 import androidx.compose.ui.unit.*
+import dev.luna5ama.strepitus.gl.GlfwCoroutineDispatcher
 import dev.luna5ama.strepitus.params.*
 import io.github.composefluent.*
 import io.github.composefluent.component.*
@@ -31,8 +32,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
-import org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose
-import org.lwjgl.glfw.GLFW.glfwSetWindowTitle
+import org.lwjgl.glfw.GLFW.*
 import java.math.MathContext
 import java.math.RoundingMode
 import java.util.concurrent.atomic.AtomicInteger
@@ -42,6 +42,7 @@ val roundingMode = MathContext(4, RoundingMode.FLOOR)
 
 class AppState(
     val windowHandle: Long,
+    val dispatcher: GlfwCoroutineDispatcher,
     val scope: CoroutineScope,
 ) {
     var mainParameters by mutableStateOf(MainParameters())
@@ -58,6 +59,19 @@ class AppState(
     var persistentStates by mutableStateOf(PersistentStates())
 
     val errorPrompts = mutableStateListOf<String>()
+
+    private val requestedClose0 = mutableStateOf(false)
+    var requestedClose
+        get() = requestedClose0.value
+        set(value) {
+            glfwSetWindowShouldClose(windowHandle, value)
+        }
+
+    init {
+        glfwSetWindowCloseCallback(windowHandle) { _ ->
+            requestedClose0.value = true
+        }
+    }
 
     private val lastSaved = AtomicInteger(Int.MIN_VALUE)
     private val changeCounter = AtomicInteger(Int.MIN_VALUE)
@@ -106,7 +120,7 @@ class AppState(
     }
 
     fun exitApp() {
-        glfwSetWindowShouldClose(windowHandle, true)
+        dispatcher.stop()
     }
 
     fun load() {
@@ -454,6 +468,11 @@ fun AppMenuBar(renderer: NoiseGeneratorRenderer, appState: AppState) {
         }
     }
 
+    if (appState.requestedClose) {
+        appState.requestedClose = false
+        checkUnsavedChanges(appState::exitApp)
+    }
+
     MenuBar(
         modifier = Modifier
             .background(color = FluentTheme.colors.background.mica.base)
@@ -534,7 +553,7 @@ fun AppMenuBar(renderer: NoiseGeneratorRenderer, appState: AppState) {
                 MenuFlyoutSeparator()
                 MenuFlyoutButton(
                     onClick = {
-                        checkUnsavedChanges(appState::exitApp)
+                        appState.requestedClose
                         isFlyoutVisible = false
                     },
                     icon = Icons.Default.Dismiss,
@@ -596,7 +615,7 @@ fun SideEditor(renderer: NoiseGeneratorRenderer, appState: AppState) {
                 modifier = Modifier
                     .width(480.dp)
                     .fillMaxHeight()
-                    .padding(8.dp)
+                    .padding(horizontal = 8.dp)
                     .verticalScroll(scrollState)
             ) {
                 Text(
