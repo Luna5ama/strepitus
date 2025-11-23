@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -58,13 +59,19 @@ class AppState(
 
     var persistentStates by mutableStateOf(PersistentStates())
 
+    var openedFile by mutableStateOf(NOISE_CONFIG_PATH)
+    val openedFileNotDefault get() = openedFile.takeIf { it != NOISE_CONFIG_PATH }
+
     val errorPrompts = mutableStateListOf<String>()
 
     private val requestedClose0 = mutableStateOf(false)
     var requestedClose
         get() = requestedClose0.value
         set(value) {
-            glfwSetWindowShouldClose(windowHandle, value)
+            scope.launch {
+                requestedClose0.value = value
+                glfwSetWindowShouldClose(windowHandle, value)
+            }
         }
 
     init {
@@ -111,9 +118,9 @@ class AppState(
 
 
         scope.launch {
-            snapshotFlow { persistentStates }
+            snapshotFlow { openedFile }
                 .collect {
-                    val title = it.openedFile?.let { "${it.name} - Strepitus" } ?: "Strepitus"
+                    val title = if (it != NOISE_CONFIG_PATH) "${it.name} - Strepitus" else "Strepitus"
                     glfwSetWindowTitle(windowHandle, title)
                 }
         }
@@ -166,7 +173,7 @@ class AppState(
     }
 
     fun resetNoise() {
-        persistentStates = persistentStates.copy(openedFile = null)
+//        persistentStates = persistentStates.copy()
         mainParameters = MainParameters()
         outputParameters = OutputParameters()
         viewerParameters = ViewerParameters()
@@ -201,17 +208,15 @@ class AppState(
         }.onFailure {
             it.printStackTrace()
             errorPrompts += "Failed to load system config: ${it.message}"
-        }.onSuccess {
-            persistentStates.openedFile?.let {
-                loadNoise(it)
-            }
         }
     }
 
     @Serializable
     data class PersistentStates(
-        @Serializable(with = PathSerilizer::class)
-        val openedFile: java.nio.file.Path? = null
+        @Transient
+        val dummy: Int = 0,
+//        @Serializable(with = PathSerilizer::class)
+//        val openedFile: java.nio.file.Path? = null
     ) {
         companion object PathSerilizer : KSerializer<java.nio.file.Path> {
             override val descriptor: SerialDescriptor
@@ -243,13 +248,14 @@ class AppState(
 
     companion object {
         val SYSTEM_CONFIG_PATH = Path("system.json")
-        val NOISE_CONFIG_PATH = Path("noise.json")
+        val NOISE_CONFIG_PATH = Path("last.json")
 
         @OptIn(ExperimentalSerializationApi::class)
         val JSON = Json {
             prettyPrint = true
             encodeDefaults = true
             prettyPrintIndent = "    "
+            ignoreUnknownKeys = true
             namingStrategy = JsonNamingStrategy.SnakeCase
         }
     }
@@ -337,7 +343,7 @@ private fun saveProjectAs(appState: AppState): Boolean {
             runCatching {
                 appState.saveNoise(result.filePath)
             }.onSuccess {
-                appState.persistentStates = appState.persistentStates.copy(openedFile = result.filePath)
+                appState.openedFile = result.filePath
             }.onFailure {
                 it.printStackTrace()
                 appState.errorPrompts += "Failed to export image: ${it.message}"
@@ -357,7 +363,7 @@ private fun saveProjectAs(appState: AppState): Boolean {
 }
 
 private fun saveProject(appState: AppState): Boolean {
-    return appState.persistentStates.openedFile?.let { path ->
+    return (appState.openedFileNotDefault)?.let { path ->
         runCatching {
             appState.saveNoise(path)
         }.onFailure {
@@ -376,7 +382,7 @@ private fun openProject(appState: AppState) {
             runCatching {
                 appState.loadNoise(result.filePath)
             }.onSuccess {
-                appState.persistentStates = appState.persistentStates.copy(openedFile = result.filePath)
+                appState.openedFile = result.filePath
             }.onFailure {
                 it.printStackTrace()
                 appState.errorPrompts += "Failed to export image: ${it.message}"
