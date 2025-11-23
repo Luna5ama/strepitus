@@ -658,7 +658,7 @@ fun SideEditor(renderer: NoiseGeneratorRenderer, appState: AppState) {
                 modifier = Modifier
                     .width(480.dp)
                     .fillMaxHeight()
-                    .padding(horizontal = 8.dp)
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
                     .verticalScroll(scrollState)
             ) {
                 Text(
