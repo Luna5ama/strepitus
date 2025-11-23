@@ -479,6 +479,43 @@ fun AppMenuBar(renderer: NoiseGeneratorRenderer, appState: AppState) {
         checkUnsavedChanges(appState::exitApp)
     }
 
+    remember {
+        renderer.keyboard.register(GLFW_KEY_S) { action ->
+            if (action != GLFW_RELEASE) return@register
+
+            val ctrlPressed = renderer.keyboard.ctrlPressed
+            val shiftPressed = renderer.keyboard.shiftPressed
+
+            if (ctrlPressed && shiftPressed) {
+                saveProjectAs(appState)
+            } else if (ctrlPressed) {
+                saveProject(appState)
+            }
+        }
+
+        renderer.keyboard.register(GLFW_KEY_O) { action ->
+            if (action != GLFW_RELEASE) return@register
+
+            val ctrlPressed = renderer.keyboard.ctrlPressed
+
+            if (ctrlPressed) {
+                checkUnsavedChanges {
+                    openProject(appState)
+                }
+            }
+        }
+
+        renderer.keyboard.register(GLFW_KEY_N) { action ->
+            if (action != GLFW_RELEASE) return@register
+
+            val ctrlPressed = renderer.keyboard.ctrlPressed
+
+            if (ctrlPressed) {
+                checkUnsavedChanges(appState::resetNoise)
+            }
+        }
+    }
+
     MenuBar(
         modifier = Modifier
             .background(color = FluentTheme.colors.background.mica.base)

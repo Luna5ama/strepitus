@@ -28,7 +28,7 @@ class GLFWWindowState() {
     val windowHeight get() = windowSize.height
 
     private lateinit var scene: ComposeScene
-    private var windowHandle by Delegates.notNull<Long>()
+    var windowHandle by Delegates.notNull<Long>(); private set
 
     val windowInfo = WindowInfoImpl()
     val platformContext = GLFWPlatformContext()

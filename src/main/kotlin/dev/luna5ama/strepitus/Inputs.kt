@@ -39,6 +39,11 @@ class Keyboard {
 
     private val registered = mutableMapOf<Int, MutableList<IntConsumer>>()
 
+    val ctrlPressed get() = pressing(GLFW_KEY_LEFT_CONTROL) || pressing(GLFW_KEY_RIGHT_CONTROL)
+    val shiftPressed get() = pressing(GLFW_KEY_LEFT_SHIFT) || pressing(GLFW_KEY_RIGHT_SHIFT)
+    val altPressed get() = pressing(GLFW_KEY_LEFT_ALT) || pressing(GLFW_KEY_RIGHT_ALT)
+    val superPressed get() = pressing(GLFW_KEY_LEFT_SUPER) || pressing(GLFW_KEY_RIGHT_SUPER)
+
     fun register(button: Int, action: IntConsumer) {
         if (button in registered) {
             registered[button]!!.add(action)
