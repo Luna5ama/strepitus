@@ -2,11 +2,12 @@
     <configuration default="false" name="MainKt" type="JetRunConfigurationType" nameIsGenerated="true">
         <option name="ALTERNATIVE_JRE_PATH" value="graalvm-jdk-24"/>
         <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true"/>
+        <envs>
+            <env name="strepitus.devenv" value="true"/>
+        </envs>
         <option name="MAIN_CLASS_NAME" value="dev.luna5ama.strepitus.MainKt"/>
         <module name="strepitus.main"/>
         <shortenClasspath name="NONE"/>
-        <option name="VM_PARAMETERS"
-                value="-Dstrepitus.devenv=true -Dstrepitus.alwaysregen=true -Dstrepitus.renderdoc=&quot;C:\Program Files\RenderDoc\renderdoc.dll&quot;"/>
         <option name="WORKING_DIRECTORY" value="run"/>
         <method v="2">
             <option name="Make" enabled="true"/>

@@ -1,5 +1,3 @@
-import org.jetbrains.compose.reload.gradle.ComposeHotRun
-
 group = "dev.luna5ama"
 version = "0.0.1-SNAPSHOT"
 
@@ -67,8 +65,10 @@ dependencies {
     implementation(libs.bundles.kmogus)
 }
 
-val runDir = File(rootDir, "run")
-runDir.mkdir()
-tasks.withType<ComposeHotRun>().configureEach {
-    workingDir(runDir)
+afterEvaluate {
+    val runDir = File(rootDir, "run")
+    runDir.mkdir()
+    tasks.withType<JavaExec>().configureEach {
+        workingDir(runDir)
+    }
 }
