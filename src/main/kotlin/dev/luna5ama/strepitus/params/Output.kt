@@ -4,7 +4,7 @@ package dev.luna5ama.strepitus.params
 
 import dev.luna5ama.glwrapper.base.*
 import dev.luna5ama.glwrapper.enums.ImageFormat
-import dev.luna5ama.strepitus.BigDecimalSerializer
+import dev.luna5ama.strepitus.util.BigDecimalSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import java.math.BigDecimal

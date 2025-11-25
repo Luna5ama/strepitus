@@ -1,4 +1,4 @@
-package dev.luna5ama.strepitus.gl
+package dev.luna5ama.strepitus.glfw
 
 import androidx.compose.ui.*
 import androidx.compose.ui.geometry.*
@@ -10,7 +10,6 @@ import dev.luna5ama.strepitus.AbstractRenderer
 import org.lwjgl.glfw.GLFW.*
 import java.awt.Component
 import java.awt.Toolkit
-import java.awt.event.InputEvent
 import java.awt.event.KeyEvent.*
 import java.awt.event.MouseEvent
 import java.awt.event.MouseWheelEvent
@@ -131,7 +130,7 @@ fun ComposeScene.subscribeToGLFWEvents(windowHandle: Long, renderer: AbstractRen
             val time = System.nanoTime() / 1_000_000
             sendKeyEvent(
                 makeKeyEvent(
-                    AwtKeyEvent.KEY_TYPED, time, getAwtMods(windowHandle), 0, char,
+                    KEY_TYPED, time, getAwtMods(windowHandle), 0, char,
                     KEY_LOCATION_UNKNOWN
                 )
             )
@@ -227,9 +226,9 @@ private fun makeKeyEvent(awtId: Int, time: Long, awtMods: Int, key: Int, char: C
             isAltGraphPressed = isAltGraphDown,
             isSymPressed = false, // no sym in awtEvent?
             isFunctionPressed = false, // no Fn in awtEvent?
-            isCapsLockOn = getLockingKeyStateSafe(AwtKeyEvent.VK_CAPS_LOCK),
-            isScrollLockOn = getLockingKeyStateSafe(AwtKeyEvent.VK_SCROLL_LOCK),
-            isNumLockOn = getLockingKeyStateSafe(AwtKeyEvent.VK_NUM_LOCK),
+            isCapsLockOn = getLockingKeyStateSafe(VK_CAPS_LOCK),
+            isScrollLockOn = getLockingKeyStateSafe(VK_SCROLL_LOCK),
+            isNumLockOn = getLockingKeyStateSafe(VK_NUM_LOCK),
         )
     }
 
@@ -271,11 +270,11 @@ private fun MouseWheelEvent(awtMods: Int) = MouseWheelEvent(
 private fun getAwtMods(windowHandle: Long): Int {
     var awtMods = 0
     if (glfwGetMouseButton(windowHandle, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS)
-        awtMods = awtMods or InputEvent.BUTTON1_DOWN_MASK
+        awtMods = awtMods or BUTTON1_DOWN_MASK
     if (glfwGetMouseButton(windowHandle, GLFW_MOUSE_BUTTON_2) == GLFW_PRESS)
-        awtMods = awtMods or InputEvent.BUTTON2_DOWN_MASK
+        awtMods = awtMods or BUTTON2_DOWN_MASK
     if (glfwGetMouseButton(windowHandle, GLFW_MOUSE_BUTTON_3) == GLFW_PRESS)
-        awtMods = awtMods or InputEvent.BUTTON3_DOWN_MASK
+        awtMods = awtMods or BUTTON3_DOWN_MASK
     if (glfwGetMouseButton(windowHandle, GLFW_MOUSE_BUTTON_4) == GLFW_PRESS)
         awtMods = awtMods or (1 shl 14)
     if (glfwGetMouseButton(windowHandle, GLFW_MOUSE_BUTTON_5) == GLFW_PRESS)
@@ -285,18 +284,18 @@ private fun getAwtMods(windowHandle: Long): Int {
             GLFW_KEY_RIGHT_CONTROL
         ) == GLFW_PRESS
     )
-        awtMods = awtMods or InputEvent.CTRL_DOWN_MASK
+        awtMods = awtMods or CTRL_DOWN_MASK
     if (glfwGetKey(windowHandle, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(
             windowHandle,
             GLFW_KEY_RIGHT_SHIFT
         ) == GLFW_PRESS
     )
-        awtMods = awtMods or InputEvent.SHIFT_DOWN_MASK
+        awtMods = awtMods or SHIFT_DOWN_MASK
     if (glfwGetKey(windowHandle, GLFW_KEY_LEFT_ALT) == GLFW_PRESS || glfwGetKey(
             windowHandle,
             GLFW_KEY_RIGHT_ALT
         ) == GLFW_PRESS
     )
-        awtMods = awtMods or InputEvent.ALT_DOWN_MASK
+        awtMods = awtMods or ALT_DOWN_MASK
     return awtMods
 }

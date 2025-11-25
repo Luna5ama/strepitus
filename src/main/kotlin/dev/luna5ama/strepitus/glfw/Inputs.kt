@@ -1,4 +1,4 @@
-package dev.luna5ama.strepitus
+package dev.luna5ama.strepitus.glfw
 
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWKeyCallbackI

@@ -1,4 +1,4 @@
-package dev.luna5ama.strepitus.gl
+package dev.luna5ama.strepitus.glfw
 
 import dev.luna5ama.glwrapper.base.*
 import java.nio.file.Path

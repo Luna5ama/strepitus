@@ -1,4 +1,4 @@
-package dev.luna5ama.strepitus
+package dev.luna5ama.strepitus.util
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind

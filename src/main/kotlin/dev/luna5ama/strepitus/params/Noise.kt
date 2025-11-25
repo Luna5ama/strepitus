@@ -9,9 +9,9 @@ import androidx.compose.ui.*
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.util.*
 import dev.luna5ama.glwrapper.ShaderProgram
-import dev.luna5ama.strepitus.BigDecimalSerializer
 import dev.luna5ama.strepitus.EnumDropdownMenu
 import dev.luna5ama.strepitus.ToggleSwitch
+import dev.luna5ama.strepitus.util.BigDecimalSerializer
 import io.github.composefluent.*
 import io.github.composefluent.component.*
 import io.github.composefluent.icons.*

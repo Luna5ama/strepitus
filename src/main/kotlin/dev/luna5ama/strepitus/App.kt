@@ -13,8 +13,12 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.*
 import androidx.compose.ui.layout.*
 import androidx.compose.ui.unit.*
-import dev.luna5ama.strepitus.gl.GlfwCoroutineDispatcher
+import dev.luna5ama.strepitus.glfw.GlfwCoroutineDispatcher
 import dev.luna5ama.strepitus.params.*
+import dev.luna5ama.strepitus.util.DialogFilter
+import dev.luna5ama.strepitus.util.DialogResult
+import dev.luna5ama.strepitus.util.showOpenDialog
+import dev.luna5ama.strepitus.util.showSaveDialog
 import io.github.composefluent.*
 import io.github.composefluent.component.*
 import io.github.composefluent.component.rememberScrollbarAdapter

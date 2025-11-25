@@ -1,4 +1,4 @@
-package dev.luna5ama.strepitus
+package dev.luna5ama.strepitus.util
 
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack

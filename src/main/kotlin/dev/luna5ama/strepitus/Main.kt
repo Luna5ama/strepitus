@@ -7,8 +7,9 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.scene.*
 import androidx.compose.ui.unit.*
 import dev.luna5ama.glwrapper.base.*
-import dev.luna5ama.strepitus.gl.GlfwCoroutineDispatcher
-import dev.luna5ama.strepitus.gl.subscribeToGLFWEvents
+import dev.luna5ama.strepitus.glfw.GLFWWindowState
+import dev.luna5ama.strepitus.glfw.GlfwCoroutineDispatcher
+import dev.luna5ama.strepitus.glfw.subscribeToGLFWEvents
 import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.skia.*
 import org.jetbrains.skiko.FrameDispatcher
