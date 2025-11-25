@@ -283,28 +283,6 @@ class AppState(
     }
 }
 
-@Composable
-fun MenuFlyoutScope.MenuFlyoutButton(
-    onClick: () -> Unit,
-    icon: ImageVector? = null,
-    text: String,
-    trailingText: String? = null,
-    enabled: Boolean = true,
-) {
-    MenuFlyoutItem(
-        onClick = onClick,
-        icon = icon?.let { { Icon(imageVector = it, contentDescription = null) } },
-        text = { Text(text) },
-        trailing = trailingText?.let {
-            {
-                Spacer(Modifier.width(16.dp))
-                Text(it, style = FluentTheme.typography.caption)
-            }
-        },
-        enabled = enabled,
-    )
-}
-
 
 @Composable
 fun App(renderer: NoiseGeneratorRenderer, appState: AppState) {
@@ -350,77 +328,6 @@ fun App(renderer: NoiseGeneratorRenderer, appState: AppState) {
 
 }
 
-data class DiscardConfirmState(
-    val onSave: () -> Unit,
-    val onDiscard: () -> Unit,
-    val onCancel: () -> Unit
-)
-
-private fun saveProjectAs(appState: AppState): Boolean {
-    val filters = listOf(
-        DialogFilter("Project File", listOf("json"))
-    )
-    return when (val result = showSaveDialog(filters)) {
-        is DialogResult.Success -> {
-            runCatching {
-                appState.saveNoise(result.filePath)
-            }.onSuccess {
-                appState.openedFile = result.filePath
-            }.onFailure {
-                it.printStackTrace()
-                appState.errorPrompts += "Failed to export image: ${it.message}"
-            }.isSuccess
-        }
-
-        is DialogResult.Canceled -> {
-            // User cancelled
-            false
-        }
-
-        is DialogResult.Error -> {
-            appState.errorPrompts += result.message
-            false
-        }
-    }
-}
-
-private fun saveProject(appState: AppState): Boolean {
-    return (appState.openedFileNotDefault)?.let { path ->
-        runCatching {
-            appState.saveNoise(path)
-        }.onFailure {
-            it.printStackTrace()
-            appState.errorPrompts += "Failed to export image: ${it.message}"
-        }.isSuccess
-    } ?: saveProjectAs(appState)
-}
-
-private fun openProject(appState: AppState) {
-    val filters = listOf(
-        DialogFilter("Project File", listOf("json"))
-    )
-    when (val result = showOpenDialog(filters)) {
-        is DialogResult.Success -> {
-            runCatching {
-                appState.loadNoise(result.filePath)
-            }.onSuccess {
-                appState.openedFile = result.filePath
-            }.onFailure {
-                it.printStackTrace()
-                appState.errorPrompts += "Failed to export image: ${it.message}"
-            }
-        }
-
-        is DialogResult.Canceled -> {
-            // User cancelled
-        }
-
-        is DialogResult.Error -> {
-            appState.errorPrompts += result.message
-        }
-    }
-}
-
 
 @Composable
 fun AppMenuBar(renderer: NoiseGeneratorRenderer, appState: AppState) {
@@ -435,6 +342,12 @@ fun AppMenuBar(renderer: NoiseGeneratorRenderer, appState: AppState) {
     var exportingFormat by remember { mutableStateOf<OutputFileFormat?>(null) }
     var lastExportParameters by remember { mutableStateOf<ExportParameters?>(null) }
 
+    data class DiscardConfirmState(
+        val onSave: () -> Unit,
+        val onDiscard: () -> Unit,
+        val onCancel: () -> Unit
+    )
+
     fun export(params: ExportParameters) {
         appState.scope.launch {
             runCatching {
@@ -442,6 +355,71 @@ fun AppMenuBar(renderer: NoiseGeneratorRenderer, appState: AppState) {
                 lastExportParameters = params
             }.onFailure { ex ->
                 appState.errorPrompts += "Failed to export image: ${ex.message}"
+            }
+        }
+    }
+
+    fun saveProjectAs(): Boolean {
+        val filters = listOf(
+            DialogFilter("Project File", listOf("json"))
+        )
+        return when (val result = showSaveDialog(filters)) {
+            is DialogResult.Success -> {
+                runCatching {
+                    appState.saveNoise(result.filePath)
+                }.onSuccess {
+                    appState.openedFile = result.filePath
+                }.onFailure {
+                    it.printStackTrace()
+                    appState.errorPrompts += "Failed to export image: ${it.message}"
+                }.isSuccess
+            }
+
+            is DialogResult.Canceled -> {
+                // User cancelled
+                false
+            }
+
+            is DialogResult.Error -> {
+                appState.errorPrompts += result.message
+                false
+            }
+        }
+    }
+
+    fun saveProject(): Boolean {
+        return (appState.openedFileNotDefault)?.let { path ->
+            runCatching {
+                appState.saveNoise(path)
+            }.onFailure {
+                it.printStackTrace()
+                appState.errorPrompts += "Failed to export image: ${it.message}"
+            }.isSuccess
+        } ?: saveProjectAs()
+    }
+
+    fun openProject() {
+        val filters = listOf(
+            DialogFilter("Project File", listOf("json"))
+        )
+        when (val result = showOpenDialog(filters)) {
+            is DialogResult.Success -> {
+                runCatching {
+                    appState.loadNoise(result.filePath)
+                }.onSuccess {
+                    appState.openedFile = result.filePath
+                }.onFailure {
+                    it.printStackTrace()
+                    appState.errorPrompts += "Failed to export image: ${it.message}"
+                }
+            }
+
+            is DialogResult.Canceled -> {
+                // User cancelled
+            }
+
+            is DialogResult.Error -> {
+                appState.errorPrompts += result.message
             }
         }
     }
@@ -478,7 +456,7 @@ fun AppMenuBar(renderer: NoiseGeneratorRenderer, appState: AppState) {
             onButtonClick = {
                 when (it) {
                     ContentDialogButton.Primary -> {
-                        if (saveProject(appState)) {
+                        if (saveProject()) {
                             state.onSave()
                         } else {
                             state.onCancel()
@@ -521,9 +499,9 @@ fun AppMenuBar(renderer: NoiseGeneratorRenderer, appState: AppState) {
             val shiftPressed = renderer.keyboard.shiftPressed
 
             if (ctrlPressed && shiftPressed) {
-                saveProjectAs(appState)
+                saveProjectAs()
             } else if (ctrlPressed) {
-                saveProject(appState)
+                saveProject()
             }
         }
 
@@ -534,7 +512,7 @@ fun AppMenuBar(renderer: NoiseGeneratorRenderer, appState: AppState) {
 
             if (ctrlPressed) {
                 checkUnsavedChanges {
-                    openProject(appState)
+                    openProject()
                 }
             }
         }
@@ -582,7 +560,7 @@ fun AppMenuBar(renderer: NoiseGeneratorRenderer, appState: AppState) {
                 MenuFlyoutButton(
                     onClick = {
                         checkUnsavedChanges {
-                            openProject(appState)
+                            openProject()
                         }
                         isFlyoutVisible = false
                     },
@@ -610,7 +588,7 @@ fun AppMenuBar(renderer: NoiseGeneratorRenderer, appState: AppState) {
                 )
                 MenuFlyoutButton(
                     onClick = {
-                        saveProject(appState)
+                        saveProject()
                         isFlyoutVisible = false
                     },
                     icon = Icons.Default.Save,
@@ -619,7 +597,7 @@ fun AppMenuBar(renderer: NoiseGeneratorRenderer, appState: AppState) {
                 )
                 MenuFlyoutButton(
                     onClick = {
-                        saveProjectAs(appState)
+                        saveProjectAs()
                         isFlyoutVisible = false
                     },
                     icon = Icons.Default.SaveEdit,

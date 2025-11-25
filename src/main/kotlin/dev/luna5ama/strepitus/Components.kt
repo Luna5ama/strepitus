@@ -5,8 +5,11 @@ import androidx.compose.foundation.text.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.focus.*
+import androidx.compose.ui.graphics.vector.*
 import androidx.compose.ui.text.input.*
+import androidx.compose.ui.unit.*
 import dev.luna5ama.strepitus.params.DisplayNameOverride
+import io.github.composefluent.*
 import io.github.composefluent.component.*
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -285,5 +288,27 @@ fun StringInput(
         },
         enabled = enabled,
         singleLine = true
+    )
+}
+
+@Composable
+fun MenuFlyoutScope.MenuFlyoutButton(
+    onClick: () -> Unit,
+    icon: ImageVector? = null,
+    text: String,
+    trailingText: String? = null,
+    enabled: Boolean = true,
+) {
+    MenuFlyoutItem(
+        onClick = onClick,
+        icon = icon?.let { { Icon(imageVector = it, contentDescription = null) } },
+        text = { Text(text) },
+        trailing = trailingText?.let {
+            {
+                Spacer(Modifier.Companion.width(16.dp))
+                Text(it, style = FluentTheme.typography.caption)
+            }
+        },
+        enabled = enabled,
     )
 }
