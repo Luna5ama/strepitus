@@ -30,8 +30,10 @@ uniform int uval_noiseType;// 0: Value, 1: Perlin, 2: Simplex, 3: Worley
 uniform int uval_dimensionType;// 0: 2D, 1: 3D
 uniform int uval_gradientMode;// 0: value, 1: gradient, 2: both
 
-// FBMParameters
 uniform int uval_baseFrequency;
+uniform float uval_baseAmplitude;
+
+// FBMParameters
 uniform int uval_octaves;
 uniform float uval_lacunarity;
 uniform float uval_persistence;
@@ -301,6 +303,8 @@ void main() {
         amp *= uval_persistence;
         freq *= uval_lacunarity;
     }
+
+    v *= uval_baseAmplitude;
 
     vec4 outputValue = imageLoad(uimg_noiseImage, texelPos);
     if (uval_compositeMode == 0) {

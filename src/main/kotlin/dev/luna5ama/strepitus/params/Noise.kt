@@ -39,24 +39,6 @@ interface ShaderProgramParameters {
 }
 
 @Serializable
-data class FBMParameters(
-    @IntRangeVal(min = 1, max = 16)
-    val octaves: Int = 4,
-    @DecimalRangeVal(min = -2.0, max = 2.0, step = 0.03125)
-    val persistence: BigDecimal = 0.5.toBigDecimal(),
-    @DecimalRangeVal(min = 1.0, max = 4.0, step = 0.03125)
-    val lacunarity: BigDecimal = 2.0.toBigDecimal(),
-    val perOctaveSeed: Boolean = true,
-) : ShaderProgramParameters {
-    override fun applyShaderUniforms(shaderProgram: ShaderProgram) {
-        shaderProgram.uniform1i("uval_octaves", this.octaves)
-        shaderProgram.uniform1f("uval_lacunarity", this.lacunarity.toFloat())
-        shaderProgram.uniform1f("uval_persistence", this.persistence.toFloat())
-        shaderProgram.uniform1i("uval_perOctaveSeed", this.perOctaveSeed.toInt())
-    }
-}
-
-@Serializable
 data class NoiseLayerParameters(
     @Transient
     @HiddenFromAutoParameter
@@ -70,6 +52,8 @@ data class NoiseLayerParameters(
     val baseSeed: String,
     @IntRangeVal(min = 1, max = 32)
     val baseFrequency: Int = 4,
+    @DecimalRangeVal(min = -1.0, max = 1.0, step = 0.03125)
+    val baseAmplitude: BigDecimal = 1.0.toBigDecimal(),
 
     @DisplayName("FBM Parameters")
     val fbmParameters: FBMParameters = FBMParameters(),
@@ -82,6 +66,7 @@ data class NoiseLayerParameters(
         shaderProgram.uniform1i("uval_dimensionType", this.dimensionType.ordinal)
 
         shaderProgram.uniform1i("uval_baseFrequency", this.baseFrequency)
+        shaderProgram.uniform1f("uval_baseAmplitude", this.baseAmplitude.toFloat())
 
         this.fbmParameters.applyShaderUniforms(shaderProgram)
         this.specificParameters.applyShaderUniforms(shaderProgram)
@@ -119,6 +104,24 @@ data class NoiseLayerParameters(
                 HEX_CHARS[random.nextInt(HEX_CHARS.length)]
             }.fastJoinToString("")
         }
+    }
+}
+
+@Serializable
+data class FBMParameters(
+    @IntRangeVal(min = 1, max = 16)
+    val octaves: Int = 4,
+    @DecimalRangeVal(min = -2.0, max = 2.0, step = 0.03125)
+    val persistence: BigDecimal = 0.5.toBigDecimal(),
+    @DecimalRangeVal(min = 1.0, max = 4.0, step = 0.03125)
+    val lacunarity: BigDecimal = 2.0.toBigDecimal(),
+    val perOctaveSeed: Boolean = true,
+) : ShaderProgramParameters {
+    override fun applyShaderUniforms(shaderProgram: ShaderProgram) {
+        shaderProgram.uniform1i("uval_octaves", this.octaves)
+        shaderProgram.uniform1f("uval_lacunarity", this.lacunarity.toFloat())
+        shaderProgram.uniform1f("uval_persistence", this.persistence.toFloat())
+        shaderProgram.uniform1i("uval_perOctaveSeed", this.perOctaveSeed.toInt())
     }
 }
 
