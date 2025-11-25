@@ -1,12 +1,8 @@
 package dev.luna5ama.strepitus
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.*
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.*
@@ -21,7 +17,6 @@ import dev.luna5ama.strepitus.util.showOpenDialog
 import dev.luna5ama.strepitus.util.showSaveDialog
 import io.github.composefluent.*
 import io.github.composefluent.component.*
-import io.github.composefluent.component.rememberScrollbarAdapter
 import io.github.composefluent.icons.*
 import io.github.composefluent.icons.regular.*
 import kotlinx.coroutines.CoroutineScope
@@ -688,110 +683,6 @@ fun AppMenuBar(renderer: NoiseGeneratorRenderer, appState: AppState) {
             Text("File")
         }
     }
-}
-
-@OptIn(ExperimentalFoundationApi::class, ExperimentalFluentApi::class)
-@Composable
-fun SideEditor(renderer: NoiseGeneratorRenderer, appState: AppState) {
-    var mainParameters by appState::mainParameters
-    var outputParameters by appState::outputParameters
-    var viewerParameters by appState::viewerParameters
-    var systemParameters by appState::systemParameters
-    val noiseLayers by appState::noiseLayers
-
-    Row {
-        var sideNavItem by remember { mutableStateOf(SideNavItem.Main) }
-        var sideNavExpanded by remember { mutableStateOf(false) }
-
-        @Composable
-        fun AppSideNavItem(item: SideNavItem) {
-            SideNavItem(
-                selected = sideNavItem == item,
-                onClick = { if (it) sideNavItem = item },
-                icon = {
-                    Icon(imageVector = item.icon, contentDescription = "")
-                },
-            ) {
-                Text(item.name)
-            }
-        }
-
-        SideNav(
-            expanded = sideNavExpanded,
-            onExpandStateChange = { sideNavExpanded = it },
-            footer = {
-                val item = SideNavItem.Setting
-                AppSideNavItem(item)
-            }
-        ) {
-            SideNavItem.entries.dropLast(1).forEach { item ->
-                AppSideNavItem(item)
-            }
-        }
-
-        val scrollState = rememberScrollState()
-        ScrollbarContainer(
-            modifier = Modifier
-                .background(color = FluentTheme.colors.background.layer.default),
-            adapter = rememberScrollbarAdapter(scrollState)
-        ) {
-            Column(
-                modifier = Modifier
-                    .width(480.dp)
-                    .fillMaxHeight()
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
-                    .verticalScroll(scrollState)
-            ) {
-                Text(
-                    sideNavItem.name,
-                    style = FluentTheme.typography.title.copy(color = FluentTheme.colors.text.text.primary),
-                    modifier = Modifier.padding(8.dp, vertical = 12.dp)
-                )
-                when (sideNavItem) {
-                    SideNavItem.Main -> {
-                        ParameterEditor(
-                            mainParameters,
-                            { mainParameters = it }
-                        )
-                    }
-
-                    SideNavItem.Output -> {
-                        ParameterEditor(
-                            outputParameters,
-                            { outputParameters = it }
-                        )
-                    }
-
-                    SideNavItem.Viewer -> {
-                        ParameterEditor(
-                            viewerParameters,
-                            { viewerParameters = it }
-                        )
-                    }
-
-                    SideNavItem.Noise -> {
-                        NoiseLayerEditor(noiseLayers)
-                    }
-
-                    SideNavItem.Setting -> {
-                        ParameterEditor(
-                            systemParameters,
-                            { systemParameters = it }
-                        )
-                        CardExpanderItem(heading = { }, icon = null) {
-                            Button(
-                                onClick = { renderer.reloadShaders() },
-                                buttonColors = ButtonDefaults.accentButtonColors()
-                            ) {
-                                Text("Reload Shaders")
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
 }
 
 @OptIn(ExperimentalFoundationApi::class)

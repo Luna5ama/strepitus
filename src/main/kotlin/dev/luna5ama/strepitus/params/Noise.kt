@@ -2,20 +2,10 @@
 
 package dev.luna5ama.strepitus.params
 
-import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshots.*
-import androidx.compose.ui.*
-import androidx.compose.ui.unit.*
 import androidx.compose.ui.util.*
 import dev.luna5ama.glwrapper.ShaderProgram
-import dev.luna5ama.strepitus.EnumDropdownMenu
-import dev.luna5ama.strepitus.ToggleSwitch
 import dev.luna5ama.strepitus.util.BigDecimalSerializer
-import io.github.composefluent.*
-import io.github.composefluent.component.*
-import io.github.composefluent.icons.*
-import io.github.composefluent.icons.regular.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -296,139 +286,6 @@ sealed interface NoiseSpecificParameters : ShaderProgramParameters {
                 shaderProgram.uniform1f("uval_worleyRegularRandPower", this.randPower.toFloat())
                 shaderProgram.uniform2f("uval_worleyRegularBounds", this.minBound.toFloat(), this.maxBound.toFloat())
                 shaderProgram.uniform1i("uval_worleyRegularStepFuncType", this.stepFunctionType.ordinal)
-            }
-        }
-    }
-}
-
-@Composable
-fun NoiseLayerEditor(
-    layers: SnapshotStateList<NoiseLayerParameters>,
-) {
-    var deletingIndex by remember { mutableIntStateOf(-1) }
-    ContentDialog(
-        title = "Delete Layer",
-        visible = deletingIndex in layers.indices,
-        size = DialogSize.Standard,
-        primaryButtonText = "Delete",
-        onButtonClick = {
-            if (it == ContentDialogButton.Primary && deletingIndex in layers.indices) {
-                layers.removeAt(deletingIndex)
-            }
-            deletingIndex = -1
-        },
-        secondaryButtonText = "Cancel",
-        content = {
-            Text("Are you sure you want to delete this layer?")
-        }
-    )
-    layers.forEachIndexed { i, layer ->
-        Expander(
-            layer.visible,
-            onExpandedChanged = { layers[i] = layer.copy(visible = it) },
-            icon = {
-                Spacer(modifier = Modifier.width(FluentTheme.typography.subtitle.fontSize.value.dp * 3.0f))
-                Icon(
-                    imageVector = Icons.Default.ReOrderDotsVertical,
-                    contentDescription = "",
-                    modifier = Modifier.size(FluentTheme.typography.subtitle.fontSize.value.dp)
-                )
-            },
-            heading = {
-                EnumDropdownMenu(
-                    value = layer.specificParameters.type,
-                    onValueChange = { newType ->
-                        val currType = layer.specificParameters.type
-                        if (newType != currType) {
-                            layers[i] = layer.copy(specificParameters = layer.specificParameters.copyToType(newType))
-                        }
-                    },
-                    buttonText = {
-                        Text(it, style = FluentTheme.typography.subtitle, modifier = Modifier.padding(vertical = 8.dp))
-                    }
-                )
-            },
-            trailing = {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = {
-                            layers.add(i, layer)
-                        },
-                        iconOnly = true
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CopyAdd,
-                            contentDescription = "Duplicate Layer"
-                        )
-                    }
-                    Button(
-                        onClick = {
-                            deletingIndex = i
-                        },
-                        iconOnly = true
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete Layer"
-                        )
-                    }
-                    Box(modifier = Modifier.padding(horizontal = 4.dp)) {
-                        ToggleSwitch(
-                            checked = layer.enabled,
-                            onCheckStateChange = { newEnabled ->
-                                layers[i] = layer.copy(enabled = newEnabled)
-                            },
-                            textOn = null,
-                            textOff = null
-                        )
-                    }
-                }
-            }
-        ) {
-            ParameterEditor(layer) { layers[i] = it }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-    }
-    Row(
-        horizontalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Box(modifier = Modifier.fillMaxWidth(0.5f)) {
-            var showAddMenu by remember { mutableStateOf(false) }
-            Button(
-                onClick = { showAddMenu = true },
-                buttonColors = ButtonDefaults.accentButtonColors(),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null
-                )
-                Spacer(Modifier.width(8.dp))
-            }
-
-            DropdownMenu(
-                expanded = showAddMenu,
-                onDismissRequest = { showAddMenu = false }
-            ) {
-                NoiseType.entries.forEach { noiseType ->
-                    DropdownMenuItem(
-                        onClick = {
-                            layers.add(
-                                NoiseLayerParameters(
-                                    baseSeed = NoiseLayerParameters.generateBaseSeed(layers.size),
-                                    specificParameters = noiseType.defaultParameter
-                                )
-                            )
-                            showAddMenu = false
-                        },
-                    ) {
-                        Text(noiseType.name)
-                    }
-                }
             }
         }
     }
