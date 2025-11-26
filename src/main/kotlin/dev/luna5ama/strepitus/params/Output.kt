@@ -40,6 +40,9 @@ enum class OutputFileFormat(
 enum class GPUFormat(val value: ImageFormat.Sized, val glslFormat: String) {
     R8G8B8A8_UN(ImageFormat.R8G8B8A8_UN, "rgba8"),
     R10G10B10A2_UN(ImageFormat.R10G10B10A2_UN, "rgb10_a2"),
+    R8G8B8A8_SN(ImageFormat.R8G8B8A8_SN, "rgba8_snorm"),
+    R16G16B16A16_UN(ImageFormat.R16G16B16A16_UN, "rgba16"),
+    R16G16B16A16_SN(ImageFormat.R16G16B16A16_SN, "rgba16_snorm"),
     R16G16B16A16_F(ImageFormat.R16G16B16A16_F, "rgba16f")
 }
 
@@ -92,41 +95,41 @@ enum class Format(val gpuFormat: GPUFormat, val outputSpec: OutputSpec) {
     ),
 
     R8_SNORM(
-        GPUFormat.R8G8B8A8_UN,
+        GPUFormat.R8G8B8A8_SN,
         OutputSpec(1, GL_BYTE, 1L)
     ),
     R8G8_SNORM(
-        GPUFormat.R8G8B8A8_UN,
+        GPUFormat.R8G8B8A8_SN,
         OutputSpec(2, GL_BYTE, 2L)
     ),
     R8G8B8A8_SNORM(
-        GPUFormat.R8G8B8A8_UN,
+        GPUFormat.R8G8B8A8_SN,
         OutputSpec(4, GL_BYTE, 4L),
     ),
 
     R16_UNORM(
-        GPUFormat.R16G16B16A16_F,
+        GPUFormat.R16G16B16A16_UN,
         OutputSpec(1, GL_UNSIGNED_SHORT, 2L)
     ),
     R16G16_UNORM(
-        GPUFormat.R16G16B16A16_F,
+        GPUFormat.R16G16B16A16_UN,
         OutputSpec(2, GL_UNSIGNED_SHORT, 4L)
     ),
     R16G16B16A16_UNORM(
-        GPUFormat.R16G16B16A16_F,
+        GPUFormat.R16G16B16A16_UN,
         OutputSpec(4, GL_UNSIGNED_SHORT, 8L),
     ),
 
     R16_SNORM(
-        GPUFormat.R16G16B16A16_F,
+        GPUFormat.R16G16B16A16_SN,
         OutputSpec(1, GL_SHORT, 2L)
     ),
     R16G16_SNORM(
-        GPUFormat.R16G16B16A16_F,
+        GPUFormat.R16G16B16A16_SN,
         OutputSpec(2, GL_SHORT, 4L)
     ),
     R16G16B16A16_SNORM(
-        GPUFormat.R16G16B16A16_F,
+        GPUFormat.R16G16B16A16_SN,
         OutputSpec(4, GL_SHORT, 8L),
     ),
 
