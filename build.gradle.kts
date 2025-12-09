@@ -12,8 +12,8 @@ plugins {
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
-        @Suppress("UnstableApiUsage")
-        vendor.set(JvmVendorSpec.JETBRAINS)
+        // @Suppress("UnstableApiUsage")
+        //vendor.set(JvmVendorSpec.JETBRAINS)
     }
 }
 
