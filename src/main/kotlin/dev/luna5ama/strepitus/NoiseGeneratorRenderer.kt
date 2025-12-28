@@ -214,7 +214,11 @@ class NoiseGeneratorRenderer(
 
                 layer.applyShaderUniforms(generateNoiseShader)
 
-                glDispatchCompute(mainParameters.width / 16, mainParameters.height / 16, mainParameters.slices)
+                glDispatchCompute(
+                    (mainParameters.width + 15) / 16,
+                    (mainParameters.height + 15) / 16,
+                    mainParameters.slices
+                )
                 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
             }
         }
@@ -228,7 +232,7 @@ class NoiseGeneratorRenderer(
     private fun process() {
         countRangeShader.bind()
         countRangeShader.applyBinding(bindings)
-        glDispatchCompute(mainParameters.width / 32, mainParameters.height / 32, mainParameters.slices)
+        glDispatchCompute((mainParameters.width + 15) / 16, (mainParameters.height + 15) / 16, mainParameters.slices)
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
         val normalizeShader = normalizeShaders[outputParameters.format.gpuFormat]
@@ -239,7 +243,7 @@ class NoiseGeneratorRenderer(
         normalizeShader.uniform1f("uval_maxVal", outputParameters.maxVal.toFloat())
         normalizeShader.uniform1i("uval_flip", if (outputParameters.flip) 1 else 0)
         normalizeShader.uniform1i("uval_dither", if (outputParameters.dither) 1 else 0)
-        glDispatchCompute(mainParameters.width / 16, mainParameters.height / 16, mainParameters.slices)
+        glDispatchCompute((mainParameters.width + 15) / 16, (mainParameters.height + 15) / 16, mainParameters.slices)
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)
     }
 

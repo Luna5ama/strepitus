@@ -45,11 +45,16 @@ dependencies {
     implementation("org.lwjgl", "lwjgl-opengl")
     implementation("org.lwjgl", "lwjgl-stb")
     implementation("org.lwjgl", "lwjgl-nfd")
-    runtimeOnly("org.lwjgl", "lwjgl", classifier = "natives-windows")
-    runtimeOnly("org.lwjgl", "lwjgl-glfw", classifier = "natives-windows")
-    runtimeOnly("org.lwjgl", "lwjgl-opengl", classifier = "natives-windows")
-    runtimeOnly("org.lwjgl", "lwjgl-stb", classifier = "natives-windows")
-    runtimeOnly("org.lwjgl", "lwjgl-nfd", classifier = "natives-windows")
+    val platforms = listOf("linux", "windows")
+    platforms.forEach {
+        runtimeOnly("org.lwjgl", "lwjgl", classifier = "natives-$it")
+        runtimeOnly("org.lwjgl", "lwjgl-glfw", classifier = "natives-$it")
+        runtimeOnly("org.lwjgl", "lwjgl-opengl", classifier = "natives-$it")
+        runtimeOnly("org.lwjgl", "lwjgl-stb", classifier = "natives-$it")
+        runtimeOnly("org.lwjgl", "lwjgl-nfd", classifier = "natives-$it")
+
+        runtimeOnly("org.jetbrains.skiko:skiko-awt-runtime-$it-x64:0.9.22.2")
+    }
 
     implementation(libs.kotlinxSerializationCore)
     implementation(libs.kotlinxSerializationJson)

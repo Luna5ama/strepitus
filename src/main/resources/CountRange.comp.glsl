@@ -4,7 +4,7 @@
 
 #include "/util/Math.glsl"
 
-layout(local_size_x = 32, local_size_y = 32) in;
+layout(local_size_x = 16, local_size_y = 16) in;
 
 layout(std430) buffer DataBuffer {
     ivec4 data;
@@ -43,8 +43,8 @@ void main() {
     barrier();
 
     if (gl_SubgroupID == 0) {
-        vec2 minCount2 = shared_minCount[gl_SubgroupInvocationID];
-        vec2 maxCount2 = shared_maxCount[gl_SubgroupInvocationID];
+        vec2 minCount2 = shared_minCount[min(gl_NumSubgroups, gl_SubgroupInvocationID)];
+        vec2 maxCount2 = shared_maxCount[min(gl_NumSubgroups, gl_SubgroupInvocationID)];
         vec2 minCount3 = subgroupMin(minCount2);
         vec2 maxCount3 = subgroupMax(maxCount2);
         ivec2 minCount3i = floatBitsToInt(minCount3);
